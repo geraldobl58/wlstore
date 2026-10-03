@@ -4,36 +4,36 @@ spring:
   threads:
     virtual:
       enabled: true
-#  datasource:
-#    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5532/catalogdb}
-#    username: ${SPRING_DATASOURCE_USERNAME:admin}
-#    password: ${SPRING_DATASOURCE_PASSWORD:admin}
-#    driver-class-name: org.postgresql.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#  data:
-#    web:
-#      pageable:
-#        default-page-size: 10
-#        max-page-size: 100
-#        one-indexed-parameters: false
-#
-#eureka:
-#  client:
-#    service-url:
-#      defaultZone: http://localhost:8761/eureka/
-#
-#app:
-#  maintenance:
-#    message: "System Operation: Version 1.1"
-#
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: "refresh, health"
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5532/catalogdb}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 100
+        one-indexed-parameters: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+app:
+  maintenance:
+    message: "System Operation: Version 1.1"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "refresh, health"
 
 server:
   port: 8081

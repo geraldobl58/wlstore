@@ -144,3 +144,11 @@ replay_pid*
 *.env
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,java
+
+### Environment variables (all microservices) ###
+# Ignore .env and any variant (.env.local, .env.production, etc.) in every
+# service directory, but keep example/sample files so they can be committed.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
