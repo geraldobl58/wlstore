@@ -1,4 +1,4 @@
-name: product
+name: wlstore
 
 services:
   catalog-db:
@@ -13,7 +13,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - /Volumes/Backup/DockerSSD/whitelabel/catalogdb:/var/lib/postgresql/data
+      - /Volumes/Backup/DockerSSD/wlstore/catalogdb:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s

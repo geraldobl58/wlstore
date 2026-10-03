@@ -141,6 +141,6 @@ hs_err_pid*
 replay_pid*
 
 # environment variable files
-catalog-service/.env
+*.env
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,java
