@@ -91,4 +91,4 @@ management:
 #        exponentialBackoffMultiplier: 2
 
 server:
-  port: 8082
+  port: 8083
