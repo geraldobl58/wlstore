@@ -17,15 +17,21 @@ import java.util.List;
 public interface ProductMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     Product toEntity(ProductRequestDTO requestDTO);
 
     ProductResponseDTO toResponseDTO(Product product);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateProductFromRequest(ProductRequestDTO productRequest, @MappingTarget Product product);
 
     default CategorySummaryDTO toCategorySummary(Category category) {

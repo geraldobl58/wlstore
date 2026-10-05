@@ -3,28 +3,25 @@ package com.wlstore.catalog_service.model;
 import com.wlstore.catalog_service.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Table(name = "tb_product")
+@Table(name = "tb_product", uniqueConstraints =
+@UniqueConstraint(name = "uk_product_tenant_title", columnNames = {"tenant_id", "title"}))
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "title", nullable = false, unique = true)
+@SuperBuilder
+public class Product extends TenantEntity {
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "brand", nullable = false, unique = true)
+    @Column(name = "brand", nullable = false)
     private String brand;
 
     @Column(name = "image", nullable = false)
@@ -36,7 +33,8 @@ public class Product {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
     private Status status;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
@@ -45,12 +43,4 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }
