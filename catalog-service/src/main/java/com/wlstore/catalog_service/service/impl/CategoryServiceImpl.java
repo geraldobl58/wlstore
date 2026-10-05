@@ -84,6 +84,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setTitle(requestDTO.title());
         applyRequestedSlug(category, requestDTO, takenSlugs);
         reconcileChildren(category, requestDTO.children(), takenSlugs);
+        category.refreshPath();
 
         Category updateCategory = categoryRepository.save(category);
 
@@ -106,6 +107,8 @@ public class CategoryServiceImpl implements CategoryService {
                 .slug(resolveSlug(requestDTO.slug(), requestDTO.title(), null, takenSlugs))
                 .parent(parent)
                 .build();
+
+        category.refreshPath();
 
         category.getChildren().addAll(buildChildren(requestDTO.children(), category, takenSlugs));
 

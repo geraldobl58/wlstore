@@ -2,6 +2,9 @@ package com.wlstore.catalog_service.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import org.springdoc.core.customizers.GlobalOperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,5 +18,18 @@ public class OpenApiConfig {
                         .title("Catalog/Product Service API")
                         .description("Manages products, categories, and their hierarchical subcategories.")
                         .version("v1"));
+    }
+
+    @Bean
+    public GlobalOperationCustomizer tenantHeaderCustomizer() {
+        return (operation, handlerMethod) -> operation.addParametersItem(
+                new Parameter()
+                        .in("header")
+                        .name("X-Tenant-Id")
+                        .description("Tenant that scopes this request. Omit to fall back to the default tenant.")
+                        .required(false)
+                        .schema(new StringSchema().format("uuid"))
+                        .example("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+        );
     }
 }
