@@ -1,24 +1,27 @@
 package com.wlstore.catalog_service.mapper;
 
-import com.wlstore.catalog_service.dto.CategorySummaryDTO;
-import com.wlstore.catalog_service.dto.ProductRequestDTO;
-import com.wlstore.catalog_service.dto.ProductResponseDTO;
+import com.wlstore.catalog_service.dto.*;
 import com.wlstore.catalog_service.model.Category;
 import com.wlstore.catalog_service.model.Product;
+import com.wlstore.catalog_service.model.ProductImage;
+import com.wlstore.catalog_service.model.ProductVariant;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface ProductMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
@@ -26,9 +29,33 @@ public interface ProductMapper {
 
     ProductResponseDTO toResponseDTO(Product product);
 
+    ProductVariantResponseDTO toVariantResponse(ProductVariant variant);
+
+    @Mapping(target = "variantSku", source = "variant.sku")
+    ProductImageResponseDTO toImageResponse(ProductImage image);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "product", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    ProductVariant toVariantEntity(ProductVariantRequestDTO variantRequest);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "product", ignore = true)
+    @Mapping(target = "variant", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    ProductImage toImageEntity(ProductImageRequestDTO imageRequest);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
@@ -46,4 +73,5 @@ public interface ProductMapper {
 
         return new CategorySummaryDTO(category.getId(), category.getTitle(), category.getSlug(), List.copyOf(path));
     }
+
 }

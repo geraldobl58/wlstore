@@ -21,7 +21,6 @@
         </processorPath>
         <module name="order-service" />
         <module name="inventory-service" />
-        <module name="catalog-service" />
       </profile>
       <profile name="Annotation profile for pricing-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -35,6 +34,16 @@
         <module name="identity-service" />
         <module name="pricing-service" />
         <module name="notification-service" />
+      </profile>
+      <profile name="Annotation profile for catalog-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.3/mapstruct-processor-1.6.3.jar" />
+        </processorPath>
+        <module name="catalog-service" />
       </profile>
     </annotationProcessing>
   </component>

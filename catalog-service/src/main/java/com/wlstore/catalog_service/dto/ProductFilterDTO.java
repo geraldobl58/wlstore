@@ -1,9 +1,8 @@
 package com.wlstore.catalog_service.dto;
 
-import com.wlstore.catalog_service.enums.Status;
+import com.wlstore.catalog_service.enums.ProductStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 public record ProductFilterDTO(
@@ -13,8 +12,8 @@ public record ProductFilterDTO(
         @Schema(description = "Partial, case-insensitive match on the brand", example = "xiaomi")
         String brand,
 
-        @Schema(description = "Exact status match", example = "IN_STOCK")
-        Status status,
+        @Schema(description = "Exact status match", example = "ACTIVE")
+        ProductStatus status,
 
         @Schema(description = "Filters by category and, by default, everything below it in the tree",
                 example = "ff70bf22-e67a-4cc7-aee6-ed7246955d5a")
@@ -27,13 +26,7 @@ public record ProductFilterDTO(
 
         @Schema(description = "When false, matches only the exact categoryId instead of its whole subtree",
                 defaultValue = "true")
-        Boolean includeChildren,
-
-        @Schema(description = "Minimum original price, inclusive", example = "100.00")
-        BigDecimal minPrice,
-
-        @Schema(description = "Maximum original price, inclusive", example = "2000.00")
-        BigDecimal maxPrice
+        Boolean includeChildren
 ) {
     public boolean shouldIncludeSubchildren() {
         return includeChildren == null || includeChildren;

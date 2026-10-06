@@ -30,17 +30,60 @@ class ProductController {
 
     private static final String PRODUCT_EXAMPLE = """
             {
-              "title": "Redmi 18",
+              "title": "Redmi 18 Pro",
               "brand": "Xiaomi",
-              "image": "https://example.com/redmi-18.png",
-              "gallery": [
-                "https://example.com/redmi-18-front.png",
-                "https://example.com/redmi-18-back.png"
-              ],
               "description": "Lorem Ipsum Dolor Sit",
-              "status": "IN_STOCK",
-              "price": 1000,
-              "categoryId": "9c858901-8a57-4791-81fe-4c455b099bc9"
+              "status": "ACTIVE",
+              "category": {
+                "id": "46f1230c-7ea0-45eb-9a02-502d920cf8d9",
+                "title": "Acessorios",
+                "slug": "acessorios",
+                "path": [
+                  "Acessorios"
+                ]
+              },
+              "variants": [
+                {
+                  "sku": "REDMI18-128-BLK",
+                  "name": "Redmi 18 128GB Preto",
+                  "optionValues": {
+                    "color": "Preto",
+                    "storage": "128GB"
+                  },
+                  "weightGrams": 200,
+                  "status": "ACTIVE",
+                  "position": 0
+                },
+                {
+                  "sku": "REDMI18-256-WHT",
+                  "name": "Redmi 18 256GB Branco",
+                  "optionValues": {
+                    "color": "Branco",
+                    "storage": "256GB"
+                  },
+                  "weightGrams": 205,
+                  "status": "ACTIVE",
+                  "position": 1
+                }
+              ],
+              "images": [
+                {
+                  "url": "https://example.com/redmi-18-front.png",
+                  "altText": "Frente",
+                  "position": 0,
+                  "primaryImage": true,
+                  "variantSku": null
+                },
+                {
+                  "url": "https://example.com/redmi-18-white.png",
+                  "altText": "Versão branca",
+                  "position": 1,
+                  "primaryImage": false,
+                  "variantSku": "REDMI18-256-WHT"
+                }
+              ],
+              "createdAt": "2026-10-05T20:56:43.887962Z",
+              "updatedAt": "2026-10-05T20:56:43.887962Z"
             }
             """;
 
@@ -67,7 +110,7 @@ class ProductController {
             summary = "List products (paginated + filters)",
             description = """
                     All filters are optional and combine with AND. `title` and `brand` are partial and \
-                    case-insensitive; `status` is exact; `minPrice`/`maxPrice` bound the original price.
+                    case-insensitive; `status` is exact.
 
                     `categoryId` matches the category **and everything below it in the tree** — filtering by \
                     "Acessorios" also returns products filed under "Capas de Silicone". Pass \

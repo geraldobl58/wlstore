@@ -14,7 +14,7 @@ import java.util.UUID;
 public final class ProductSpecifications {
     private ProductSpecifications(){}
 
-    public static Specification<Product> withFilters(com.wlstore.catalog_service.dto.ProductFilterDTO filter, Collection<UUID> categoriesIds){
+    public static Specification<Product> withFilters(ProductFilterDTO filter, Collection<UUID> categoryIds) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -30,16 +30,8 @@ public final class ProductSpecifications {
                 predicates.add(builder.equal(root.get("status"), filter.status()));
             }
 
-            if (filter.minPrice() != null) {
-                predicates.add(builder.greaterThanOrEqualTo(root.get("price").get("originalPrice"), filter.minPrice()));
-            }
-
-            if (filter.maxPrice() != null) {
-                predicates.add(builder.lessThanOrEqualTo(root.get("price").get("originalPrice"), filter.maxPrice()));
-            }
-
-            if (categoriesIds != null) {
-                predicates.add(root.get("category").get("id").in(categoriesIds));
+            if (categoryIds != null) {
+                predicates.add(root.get("category").get("id").in(categoryIds));
             }
 
             return builder.and(predicates.toArray(Predicate[]::new));
