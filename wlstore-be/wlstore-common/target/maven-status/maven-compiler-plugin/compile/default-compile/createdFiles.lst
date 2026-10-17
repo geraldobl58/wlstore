@@ -1,0 +1,13 @@
+com/wlstore/common/tenant/RequestTenantResolver.class
+com/wlstore/common/persistence/BaseEntity.class
+com/wlstore/common/persistence/TenantEntity.class
+com/wlstore/common/persistence/TenantEntity$TenantEntityBuilderImpl.class
+com/wlstore/common/web/GlobalControllerAdvice.class
+com/wlstore/common/persistence/BaseEntity$BaseEntityBuilder.class
+com/wlstore/common/exception/ResourceNotFoundException.class
+com/wlstore/common/web/PageResponseDTO.class
+com/wlstore/common/config/WlstoreJpaAutoConfiguration.class
+com/wlstore/common/tenant/TenantFilter.class
+com/wlstore/common/config/WlstoreTenantAutoConfiguration.class
+com/wlstore/common/config/WlstoreCommonAutoConfiguration.class
+com/wlstore/common/persistence/TenantEntity$TenantEntityBuilder.class

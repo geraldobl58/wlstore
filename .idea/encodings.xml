@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/wlstore-be/catalog-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/discovery-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/identity-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/inventory-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/order-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/payment-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/pricing-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/wlstore-be/wlstore-common/src/main/java" charset="UTF-8" />
+  </component>
+</project>

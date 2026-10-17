@@ -1,0 +1,10 @@
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/config/WlstoreCommonAutoConfiguration.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/config/WlstoreJpaAutoConfiguration.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/config/WlstoreTenantAutoConfiguration.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/exception/ResourceNotFoundException.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/persistence/BaseEntity.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/persistence/TenantEntity.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/tenant/RequestTenantResolver.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/tenant/TenantFilter.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/web/GlobalControllerAdvice.java
+/Users/geraldoluiz/Development/projects/fullstack/wlstore/wlstore-common/src/main/java/com/wlstore/common/web/PageResponseDTO.java

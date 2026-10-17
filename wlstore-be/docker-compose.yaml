@@ -1,0 +1,31 @@
+name: wlstore
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    hostname: 9e6353c96893
+    ports:
+      - "5672:5672"   # Porta para comunicação das aplicações com o RabbitMQ
+      - "15672:15672" # Porta para o painel de gerenciamento web
+    environment:
+      - RABBITMQ_NODENAME=rabbit@9e6353c96893
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - whitelabel-network
+
+volumes:
+  rabbitmq:
+
+networks:
+  whitelabel-network:
+    driver: bridge

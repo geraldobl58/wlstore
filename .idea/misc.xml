@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/wlstore-be/catalog-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/discovery-server/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/identity-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/inventory-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/order-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/payment-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/pricing-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/wlstore-common/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="ms-21" project-jdk-type="JavaSDK" />
+</project>
