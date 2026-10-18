@@ -13,6 +13,7 @@
         <option value="$PROJECT_DIR$/wlstore-be/payment-service/pom.xml" />
         <option value="$PROJECT_DIR$/wlstore-be/pricing-service/pom.xml" />
         <option value="$PROJECT_DIR$/wlstore-be/wlstore-common/pom.xml" />
+        <option value="$PROJECT_DIR$/wlstore-be/pom.xml" />
       </list>
     </option>
   </component>

@@ -1,17 +1,59 @@
 name: wlstore
 
 services:
+  catalog-db:
+    image: postgres:16-alpine
+    container_name: catalog-db
+    env_file:
+      - .env
+    ports:
+      - "${CATALOG_DB_PORT}:5432"
+    environment:
+      - POSTGRES_USER=${CATALOG_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${CATALOG_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${CATALOG_POSTGRES_DB}
+    volumes:
+      - catalogdb-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${CATALOG_POSTGRES_USER} -d ${CATALOG_POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  pricing-db:
+    image: postgres:16-alpine
+    container_name: pricing-db
+    env_file:
+      - .env
+    ports:
+      - "${PRICING_DB_PORT}:5432"
+    environment:
+      - POSTGRES_USER=${PRICING_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${PRICING_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${PRICING_POSTGRES_DB}
+    volumes:
+      - pricingdb-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PRICING_POSTGRES_USER} -d ${PRICING_POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: rabbitmq
     hostname: 9e6353c96893
+    env_file:
+      - .env
     ports:
-      - "5672:5672"   # Porta para comunicação das aplicações com o RabbitMQ
+      - "${RABBITMQ_PORT}:5672"       # Porta para comunicação das aplicações com o RabbitMQ
       - "15672:15672" # Porta para o painel de gerenciamento web
     environment:
       - RABBITMQ_NODENAME=rabbit@9e6353c96893
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     volumes:
       - rabbitmq:/var/lib/rabbitmq
     healthcheck:
@@ -24,7 +66,10 @@ services:
       - whitelabel-network
 
 volumes:
+  catalogdb-data:
+  pricingdb-data:
   rabbitmq:
+
 
 networks:
   whitelabel-network:
