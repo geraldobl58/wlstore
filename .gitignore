@@ -1,0 +1,10 @@
+# IDE
+.idea/
+
+# Maven / Gradle build output
+**/target/
+**/build/
+
+# System files
+.DS_Store
+**/.DS_Store
