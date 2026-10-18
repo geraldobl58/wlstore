@@ -14,5 +14,11 @@
         <module>wlstore-common</module>
         <module>catalog-service</module>
         <module>pricing-service</module>
+        <module>identity-service</module>
+        <module>discovery-server</module>
+        <module>inventory-service</module>
+        <module>notification-service</module>
+        <module>order-service</module>
+        <module>payment-service</module>
     </modules>
 </project>
