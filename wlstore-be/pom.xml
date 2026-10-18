@@ -13,5 +13,6 @@
     <modules>
         <module>wlstore-common</module>
         <module>catalog-service</module>
+        <module>pricing-service</module>
     </modules>
 </project>
