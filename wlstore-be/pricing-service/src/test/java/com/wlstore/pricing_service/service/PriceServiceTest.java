@@ -3,6 +3,8 @@ package com.wlstore.pricing_service.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +21,12 @@ class PriceServiceTest extends AbstractIntegrationTest {
     @Autowired
     PriceRepository priceRepository;
 
+    @Autowired
+    SkuSyncService skuSyncService;
+
     @Test
     void definesFirstPriceAsCurrent() {
+        skuSyncService.sync(UUID.randomUUID(), Set.of("SVC-001"));
         priceService.definePrice("SVC-001", 9900L, null);
 
         Price current = priceRepository.findBySkuAndValidToIsNull("SVC-001").orElseThrow();
@@ -31,6 +37,7 @@ class PriceServiceTest extends AbstractIntegrationTest {
 
     @Test
     void definingNewPriceClosesThePreviousOne() {
+        skuSyncService.sync(UUID.randomUUID(), Set.of("SVC-002"));
         priceService.definePrice("SVC-002", 10000L, null);
         priceService.definePrice("SVC-002", 9000L, 10000L);
 

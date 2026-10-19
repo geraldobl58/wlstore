@@ -12,6 +12,10 @@ public class RequestTenantResolver implements CurrentTenantIdentifierResolver<UU
 
     @Override
     public UUID resolveCurrentTenantIdentifier() {
+        return TenantContext.current().orElseGet(this::fromRequest);
+    }
+
+    private UUID fromRequest() {
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
 
         if (attrs != null

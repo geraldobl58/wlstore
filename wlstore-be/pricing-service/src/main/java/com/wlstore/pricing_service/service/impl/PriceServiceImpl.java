@@ -1,6 +1,8 @@
 package com.wlstore.pricing_service.service.impl;
 
+import com.wlstore.pricing_service.exception.UnknownSkuException;
 import com.wlstore.pricing_service.model.Price;
+import com.wlstore.pricing_service.repository.KnownSkuRepository;
 import com.wlstore.pricing_service.repository.PriceRepository;
 import com.wlstore.pricing_service.service.PriceService;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +14,17 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 public class PriceServiceImpl implements PriceService {
+
     private final PriceRepository priceRepository;
+    private final KnownSkuRepository knownSkuRepository;
 
     @Override
     @Transactional
     public Price definePrice(String sku, long amountCents, Long originalAmountCents) {
+        if (!knownSkuRepository.existsBySku(sku)) {
+            throw new UnknownSkuException(sku);
+        }
+
         Instant now = Instant.now();
 
         priceRepository.findBySkuAndValidToIsNull(sku).ifPresent(current -> {
@@ -24,13 +32,13 @@ public class PriceServiceImpl implements PriceService {
             priceRepository.saveAndFlush(current);
         });
 
-        Price newPrice = Price.builder()
+        Price price = Price.builder()
                 .sku(sku)
                 .amountCents(amountCents)
                 .originalAmountCents(originalAmountCents)
                 .validFrom(now)
                 .build();
 
-        return priceRepository.saveAndFlush(newPrice);
+        return priceRepository.saveAndFlush(price);
     }
 }
