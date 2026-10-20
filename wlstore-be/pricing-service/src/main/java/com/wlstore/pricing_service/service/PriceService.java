@@ -8,4 +8,5 @@ import java.util.List;
 public interface PriceService {
     Price definePrice(String sku, long amountCents, Long originalAmountCents);
     List<Price> findCurrentPrices(Collection<String> skus);
+    List<Price> findHistory(String sku);
 }

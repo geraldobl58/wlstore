@@ -76,4 +76,21 @@ public class PriceController {
                 .map(PriceResponseDTO::from)
                 .toList();
     }
+
+    @Operation(
+            summary = "Price history of a SKU",
+            description = """
+                    Returns every price period of the SKU, oldest first. The period in effect is the one \
+                    whose `validTo` is null. A known SKU that was never priced returns an empty list.
+                    """
+    )
+    @ApiResponse(responseCode = "200", description = "History found (possibly empty)")
+    @ApiResponse(responseCode = "404", description = "sku is not a known SKU")
+    @GetMapping("/{sku}/history")
+    public List<PriceResponseDTO> history(@PathVariable String sku) {
+        return priceService.findHistory(sku)
+                .stream()
+                .map(PriceResponseDTO::from)
+                .toList();
+    }
 }

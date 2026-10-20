@@ -53,4 +53,14 @@ public class PriceServiceImpl implements PriceService {
 
         return priceRepository.findBySkuInAndValidToIsNull(skus);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Price> findHistory(String sku) {
+        if (!knownSkuRepository.existsBySku(sku)) {
+            throw new UnknownSkuException(sku);
+        }
+
+        return priceRepository.findBySkuOrderByValidFromAsc(sku);
+    }
 }

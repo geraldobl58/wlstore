@@ -11,7 +11,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -121,6 +123,59 @@ class PriceControllerTest extends AbstractIntegrationTest {
 
         mockMvc.perform(get("/api/v1/prices")
                         .param("skus", "LST-020")
+                        .header(TENANT_HEADER, tenantB.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void returnsTheWholePriceHistoryOldestFirst() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        registerSku(tenant, "HST-001");
+        definePrice(tenant, "HST-001", 10000);
+        definePrice(tenant, "HST-001", 9000);
+        definePrice(tenant, "HST-001", 8000);
+
+        mockMvc.perform(get("/api/v1/prices/HST-001/history")
+                        .header(TENANT_HEADER, tenant.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[*].amountCents", contains(10000, 9000, 8000)))
+                .andExpect(jsonPath("$[0].validTo").isNotEmpty())
+                .andExpect(jsonPath("$[1].validTo").isNotEmpty())
+                .andExpect(jsonPath("$[2].validTo").value(nullValue()));
+    }
+
+    @Test
+    void returnsAnEmptyHistoryForAKnownSkuThatNeverHadAPrice() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        registerSku(tenant, "HST-002");
+
+        mockMvc.perform(get("/api/v1/prices/HST-002/history")
+                        .header(TENANT_HEADER, tenant.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void answersNotFoundForTheHistoryOfASkuTheTenantDoesNotKnow() throws Exception {
+        mockMvc.perform(get("/api/v1/prices/HST-UNKNOWN/history")
+                        .header(TENANT_HEADER, UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Resource Not Found"));
+    }
+
+    @Test
+    void doesNotShowTheHistoryOfAnotherTenant() throws Exception {
+        UUID tenantA = UUID.randomUUID();
+        UUID tenantB = UUID.randomUUID();
+        registerSku(tenantA, "HST-003");
+        registerSku(tenantB, "HST-003");
+        definePrice(tenantA, "HST-003", 10000);
+        definePrice(tenantA, "HST-003", 9000);
+
+        mockMvc.perform(get("/api/v1/prices/HST-003/history")
                         .header(TENANT_HEADER, tenantB.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());

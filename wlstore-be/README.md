@@ -144,3 +144,22 @@ mvn -pl catalog-service -am spring-boot:run
 ```
 
 Swagger do catálogo: `http://localhost:8081/swagger-ui.html`. Toda requisição precisa do header `X-Tenant-Id: <uuid>`.
+
+## Como funciona a mensageria (RabbitMQ)
+
+O catálogo publica eventos de produto e o pricing consome, sem um conhecer o outro. A ligação entre os dois é só o exchange `catalog.events` (topic) e a chave de roteamento `product.*` — o catálogo nem sabe que o pricing existe.
+
+### Fluxo básico
+O catálogo grava o produto e a carta (`tb_outbox`) na mesma transação, e um relayer entrega a carta ao exchange. A chave (`product.created`, `product.updated` ou `product.deleted`) casa com o binding `product.*` da fila `pricing.catalog-events`, e a carta espera lá até o pricing buscar, gravar o SKU (`tb_known_sku`) e confirmar (ack).
+
+![Fluxo básico: catálogo publica, RabbitMQ roteia, pricing consome](assets/rabbitmq-fluxo-basico.svg)
+
+### E se o pricing cair?
+A fila é durável: as cartas ficam guardadas (`Ready`) até o serviço voltar e processá-las uma a uma, na ordem de chegada. Nada se perde.
+
+![Pricing fora do ar: as cartas ficam guardadas na fila](assets/rabbitmq-pricing-fora-do-ar.svg)
+
+### Idempotência e falhas
+- Entrega é *at-least-once*: a mesma carta pode chegar duas vezes (retry, reconexão). O pricing registra o `messageId` em `tb_processed_event` (inbox) antes de processar; se já existe, a mensagem é descartada em silêncio.
+- Mensagem que falha repetidamente vai para a dead-letter queue `pricing.catalog-events.dlq`, para não travar a fila principal.
+- SKU removido do produto (ou produto deletado) fecha o preço vigente daquele SKU — ele some de `tb_known_sku` e não pode mais receber um novo preço até reaparecer num evento futuro.
