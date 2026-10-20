@@ -55,4 +55,30 @@ class PriceServiceTest extends AbstractIntegrationTest {
         assertThat(current.getOriginalAmountCents()).isEqualTo(10000L);
         assertThat(current.getValidTo()).isNull();
     }
+
+    @Test
+    void definingTheSamePriceAgainChangesNothing() {
+        skuSyncService.sync(UUID.randomUUID(), Set.of("SVC-003"));
+        Price first = priceService.definePrice("SVC-003", 9000L, 10000L);
+
+        Price second = priceService.definePrice("SVC-003", 9000L, 10000L);
+
+        assertThat(second.getId()).isEqualTo(first.getId());
+        assertThat(priceRepository.findBySkuOrderByValidFromAsc("SVC-003")).hasSize(1);
+        assertThat(priceRepository.findBySkuAndValidToIsNull("SVC-003")).isPresent();
+    }
+
+    @Test
+    void changingOnlyTheOriginalPriceIsStillANewPeriod() {
+        skuSyncService.sync(UUID.randomUUID(), Set.of("SVC-004"));
+        priceService.definePrice("SVC-004", 9000L, 10000L);
+
+        priceService.definePrice("SVC-004", 9000L, 12000L);
+
+        List<Price> history = priceRepository.findBySkuOrderByValidFromAsc("SVC-004");
+
+        assertThat(history).hasSize(2);
+        assertThat(history.get(1).getOriginalAmountCents()).isEqualTo(12000L);
+        assertThat(history.get(1).getValidTo()).isNull();
+    }
 }

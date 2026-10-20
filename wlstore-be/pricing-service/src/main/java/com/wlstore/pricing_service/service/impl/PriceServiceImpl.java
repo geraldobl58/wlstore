@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +29,17 @@ public class PriceServiceImpl implements PriceService {
             throw new UnknownSkuException(sku);
         }
 
+        Optional<Price> current = priceRepository.findBySkuAndValidToIsNull(sku);
+
+        if (current.isPresent() && isSamePrice(current.get(), amountCents, originalAmountCents)) {
+            return current.get();
+        }
+
         Instant now = Instant.now();
 
-        priceRepository.findBySkuAndValidToIsNull(sku).ifPresent(current -> {
-            current.setValidTo(now);
-            priceRepository.saveAndFlush(current);
+        current.ifPresent(price -> {
+            price.setValidTo(now);
+            priceRepository.saveAndFlush(price);
         });
 
         Price price = Price.builder()
@@ -62,5 +70,10 @@ public class PriceServiceImpl implements PriceService {
         }
 
         return priceRepository.findBySkuOrderByValidFromAsc(sku);
+    }
+
+    private boolean isSamePrice(Price price, long amountCents, Long originalAmountCents) {
+        return Objects.equals(price.getAmountCents(), amountCents)
+                && Objects.equals(price.getOriginalAmountCents(), originalAmountCents);
     }
 }
