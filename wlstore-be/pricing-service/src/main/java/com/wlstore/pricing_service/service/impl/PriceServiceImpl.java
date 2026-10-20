@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -40,5 +42,15 @@ public class PriceServiceImpl implements PriceService {
                 .build();
 
         return priceRepository.saveAndFlush(price);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Price> findCurrentPrices(Collection<String> skus) {
+        if (skus.isEmpty()) {
+            return List.of();
+        }
+
+        return priceRepository.findBySkuInAndValidToIsNull(skus);
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,8 +79,63 @@ class PriceControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Bad Request"));
     }
 
+    @Test
+    void returnsTheCurrentPricesOfTheRequestedSkusAndSkipsTheOnesWithoutPrice() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        registerSku(tenant, "LST-001");
+        registerSku(tenant, "LST-002");
+        registerSku(tenant, "LST-003");
+        definePrice(tenant, "LST-001", 10000);
+        definePrice(tenant, "LST-002", 20000);
+
+        mockMvc.perform(get("/api/v1/prices")
+                        .param("skus", "LST-001,LST-002,LST-003")
+                        .header(TENANT_HEADER, tenant.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].sku", containsInAnyOrder("LST-001", "LST-002")));
+    }
+
+    @Test
+    void returnsOnlyTheCurrentPriceWhenThePriceChanged() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        registerSku(tenant, "LST-010");
+        definePrice(tenant, "LST-010", 10000);
+        definePrice(tenant, "LST-010", 9000);
+
+        mockMvc.perform(get("/api/v1/prices")
+                        .param("skus", "LST-010")
+                        .header(TENANT_HEADER, tenant.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].amountCents").value(9000));
+    }
+
+    @Test
+    void doesNotReturnThePricesOfAnotherTenant() throws Exception {
+        UUID tenantA = UUID.randomUUID();
+        UUID tenantB = UUID.randomUUID();
+        registerSku(tenantA, "LST-020");
+        registerSku(tenantB, "LST-020");
+        definePrice(tenantA, "LST-020", 10000);
+
+        mockMvc.perform(get("/api/v1/prices")
+                        .param("skus", "LST-020")
+                        .header(TENANT_HEADER, tenantB.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
     private void registerSku(UUID tenant, String sku) {
         TenantContext.runWithTenant(tenant,
                 () -> skuSyncService.sync(UUID.randomUUID(), Set.of(sku)));
+    }
+
+    private void definePrice(UUID tenant, String sku, long amountCents) throws Exception {
+        mockMvc.perform(put("/api/v1/prices/" + sku)
+                        .header(TENANT_HEADER, tenant.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"amountCents\":" + amountCents + "}"))
+                .andExpect(status().isOk());
     }
 }

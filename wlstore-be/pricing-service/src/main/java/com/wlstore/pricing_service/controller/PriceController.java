@@ -4,6 +4,7 @@ import com.wlstore.pricing_service.dto.PriceRequestDTO;
 import com.wlstore.pricing_service.dto.PriceResponseDTO;
 import com.wlstore.pricing_service.service.PriceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/prices")
@@ -53,5 +56,24 @@ public class PriceController {
     ) {
         return PriceResponseDTO.from(
                 priceService.definePrice(sku, request.amountCents(), request.originalAmountCents()));
+    }
+
+    @Operation(
+            summary = "List the current prices of several SKUs",
+            description = """
+                    Returns the price in effect for each requested SKU, in a single call. \
+                    SKUs without a current price (not priced yet, or unknown to this tenant) are simply \
+                    absent from the response; this is not an error.
+                    """
+    )
+    @ApiResponse(responseCode = "200", description = "Current prices found (possibly empty)")
+    @GetMapping
+    public List<PriceResponseDTO> listCurrent(
+            @Parameter(description = "Comma-separated SKUs", example = "CAM-P-AZUL,CAM-M-AZUL")
+            @RequestParam List<String> skus){
+        return priceService.findCurrentPrices(skus)
+                .stream()
+                .map(PriceResponseDTO::from)
+                .toList();
     }
 }
