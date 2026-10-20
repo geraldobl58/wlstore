@@ -159,7 +159,12 @@ A fila é durável: as cartas ficam guardadas (`Ready`) até o serviço voltar e
 
 ![Pricing fora do ar: as cartas ficam guardadas na fila](assets/rabbitmq-pricing-fora-do-ar.svg)
 
+### E se uma carta vier com defeito?
+O pricing tenta 3 vezes (1s, 2s, 4s). Se continuar falhando, a carta vai para a DLQ e a fila principal segue.
+
+![Carta com defeito: três tentativas e depois a DLQ](assets/rabbitmq-carta-com-defeito-dlq.svg)
+
 ### Idempotência e falhas
 - Entrega é *at-least-once*: a mesma carta pode chegar duas vezes (retry, reconexão). O pricing registra o `messageId` em `tb_processed_event` (inbox) antes de processar; se já existe, a mensagem é descartada em silêncio.
-- Mensagem que falha repetidamente vai para a dead-letter queue `pricing.catalog-events.dlq`, para não travar a fila principal.
+- Mensagem que falha repetidamente após as 3 tentativas vai para a dead-letter queue `pricing.catalog-events.dlq`, para não travar a fila principal.
 - SKU removido do produto (ou produto deletado) fecha o preço vigente daquele SKU — ele some de `tb_known_sku` e não pode mais receber um novo preço até reaparecer num evento futuro.

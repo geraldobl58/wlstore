@@ -7,11 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -35,6 +38,20 @@ public class GlobalControllerAdvice {
         problemDetail.setProperty("resourceName", ex.getResourceName());
         problemDetail.setProperty("fieldName", ex.getFieldName());
         problemDetail.setProperty("fieldValue", ex.getFieldValue());
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex, WebRequest request) {
+
+        log.warn("No route for request: {}", request.getDescription(false));
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                "No endpoint matches this request");
+        problemDetail.setTitle("Resource Not Found");
+        problemDetail.setType(URI.create("https://example.com/resource-not-found"));
+        problemDetail.setProperty("timestamp", Instant.now());
 
         return problemDetail;
     }
@@ -67,6 +84,34 @@ public class GlobalControllerAdvice {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setTitle("Bad Request");
         problemDetail.setType(URI.create("https://example.com/bad-request"));
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ProblemDetail handleMissingParameter(MissingServletRequestParameterException ex) {
+
+        log.warn("Missing request parameter: {}", ex.getParameterName());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Required parameter '" + ex.getParameterName() + "' is missing");
+        problemDetail.setTitle("Bad Request");
+        problemDetail.setType(URI.create("https://example.com/bad-request"));
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+
+        log.warn("Method not supported: {}", ex.getMethod());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.METHOD_NOT_ALLOWED,
+                "Method '" + ex.getMethod() + "' is not supported for this endpoint");
+        problemDetail.setTitle("Method Not Allowed");
+        problemDetail.setType(URI.create("https://example.com/method-not-allowed"));
         problemDetail.setProperty("timestamp", Instant.now());
 
         return problemDetail;
