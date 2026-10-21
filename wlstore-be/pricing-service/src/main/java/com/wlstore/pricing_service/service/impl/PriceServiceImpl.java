@@ -1,7 +1,9 @@
 package com.wlstore.pricing_service.service.impl;
 
 import com.wlstore.pricing_service.exception.UnknownSkuException;
+import com.wlstore.pricing_service.model.KnownSku;
 import com.wlstore.pricing_service.model.Price;
+import com.wlstore.pricing_service.outbox.PriceEventRecorder;
 import com.wlstore.pricing_service.repository.KnownSkuRepository;
 import com.wlstore.pricing_service.repository.PriceRepository;
 import com.wlstore.pricing_service.service.PriceService;
@@ -21,13 +23,13 @@ public class PriceServiceImpl implements PriceService {
 
     private final PriceRepository priceRepository;
     private final KnownSkuRepository knownSkuRepository;
+    private final PriceEventRecorder priceEventRecorder;
 
     @Override
     @Transactional
     public Price definePrice(String sku, long amountCents, Long originalAmountCents) {
-        if (!knownSkuRepository.existsBySku(sku)) {
-            throw new UnknownSkuException(sku);
-        }
+        KnownSku knownSku = knownSkuRepository.findBySku(sku)
+                .orElseThrow(() -> new UnknownSkuException(sku));
 
         Optional<Price> current = priceRepository.findBySkuAndValidToIsNull(sku);
 
@@ -49,7 +51,11 @@ public class PriceServiceImpl implements PriceService {
                 .validFrom(now)
                 .build();
 
-        return priceRepository.saveAndFlush(price);
+        Price saved = priceRepository.saveAndFlush(price);
+
+        priceEventRecorder.record(saved, knownSku.getProductId());
+
+        return saved;
     }
 
     @Override
