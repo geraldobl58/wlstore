@@ -14,10 +14,17 @@ public class RabbitConfig {
     public static final String CATALOG_EVENTS_QUEUE = "pricing.catalog-events";
     public static final String CATALOG_EVENTS_DLQ = "pricing.catalog-events.dlq";
     public static final String PRODUCT_ROUTING_PATTERN = "product.*";
+    public static final String PRICING_EVENTS_EXCHANGE = "pricing.events";
 
     @Bean
     TopicExchange catalogExchange() {
         return new TopicExchange(CATALOG_EXCHANGE, true, false);
+    }
+
+    /** Exchange onde o pricing publica os próprios eventos (price.changed). Topic e durável. */
+    @Bean
+    TopicExchange pricingEventsExchange() {
+        return new TopicExchange(PRICING_EVENTS_EXCHANGE, true, false);
     }
 
     @Bean
