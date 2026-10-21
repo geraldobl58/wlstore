@@ -16,6 +16,14 @@ spring:
     open-in-view: false
   rabbitmq:
     publisher-confirm-type: correlated
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
   data:
     web:
       pageable:
