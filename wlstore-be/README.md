@@ -168,3 +168,14 @@ O pricing tenta 3 vezes (1s, 2s, 4s). Se continuar falhando, a carta vai para a 
 - Entrega é *at-least-once*: a mesma carta pode chegar duas vezes (retry, reconexão). O pricing registra o `messageId` em `tb_processed_event` (inbox) antes de processar; se já existe, a mensagem é descartada em silêncio.
 - Mensagem que falha repetidamente após as 3 tentativas vai para a dead-letter queue `pricing.catalog-events.dlq`, para não travar a fila principal.
 - SKU removido do produto (ou produto deletado) fecha o preço vigente daquele SKU — ele some de `tb_known_sku` e não pode mais receber um novo preço até reaparecer num evento futuro.
+
+## Roadmap: busca inteligente
+
+Planejado depois do fluxo de compra. A ideia é construir sobre a mensageria que já existe, sem acoplar os serviços:
+
+- **search-service**: novo microsserviço com Elasticsearch. Consome `product.*` (catálogo) e `price.changed` (pricing) e mantém um índice de busca por tenant. Nada de consulta direta aos bancos dos outros serviços.
+- **Busca de texto**: título, marca, descrição e categoria, com sinônimos, correção de digitação e filtros por preço e atributos (ordenar por preço já é possível no catálogo; o Elasticsearch passa a cuidar de relevância).
+- **Sugestão com IA**: autocomplete e "produtos parecidos" a partir de embeddings dos produtos (busca vetorial no próprio Elasticsearch). A IA é um recurso de relevância: o índice continua sendo alimentado por eventos, e o catálogo segue como fonte da verdade.
+- **Isolamento por tenant**: cada documento do índice leva o `tenantId`, e toda consulta filtra por ele, o mesmo princípio do `@TenantId` nos bancos.
+
+O que prepara o terreno hoje: eventos de produto e de preço em estado completo (*snapshot*), consumidores idempotentes e o read model de preço no catálogo.
