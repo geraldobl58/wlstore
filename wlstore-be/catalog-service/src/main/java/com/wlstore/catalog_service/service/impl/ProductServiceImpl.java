@@ -13,24 +13,29 @@ import com.wlstore.catalog_service.model.Category;
 import com.wlstore.catalog_service.model.Product;
 import com.wlstore.catalog_service.model.ProductImage;
 import com.wlstore.catalog_service.model.ProductVariant;
+import com.wlstore.catalog_service.model.VariantPrice;
 import com.wlstore.catalog_service.outbox.ProductEventRecorder;
 import com.wlstore.catalog_service.repository.CategoryRepository;
 import com.wlstore.catalog_service.repository.ProductRepository;
 import com.wlstore.catalog_service.repository.ProductSpecifications;
+import com.wlstore.catalog_service.repository.VariantPriceRepository;
 import com.wlstore.catalog_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final VariantPriceRepository variantPriceRepository;
     private final ProductMapper productMapper;
     private final ProductEventRecorder eventRecorder;
 
@@ -57,11 +62,14 @@ public class ProductServiceImpl implements ProductService {
     public PageResponseDTO<ProductResponseDTO> findAll(ProductFilterDTO filter, Pageable pageable) {
         Collection<UUID> categoryIds = resolveCategoryIds(filter);
 
-        return PageResponseDTO.from(
-                productRepository
-                        .findAll(ProductSpecifications.withFilters(filter, categoryIds), pageable)
-                        .map(productMapper::toResponseDTO)
-        );
+        Page<Product> products = productRepository
+                .findAll(ProductSpecifications.withFilters(filter, categoryIds), pageable);
+
+        Map<UUID, Long> priceFromByProduct = lowestPriceByProduct(
+                products.getContent().stream().map(Product::getId).toList());
+
+        return PageResponseDTO.from(products.map(product ->
+                withPriceFrom(productMapper.toResponseDTO(product), priceFromByProduct.get(product.getId()))));
     }
 
     @Override
@@ -118,6 +126,28 @@ public class ProductServiceImpl implements ProductService {
         return categoryRepository
                 .findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+    }
+
+    /**
+     * One query for the whole page (IN), then the minimum per product. Products without any price
+     * are simply absent from the map, so the caller gets null for them.
+     */
+    private Map<UUID, Long> lowestPriceByProduct(Collection<UUID> productIds) {
+        if (productIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return variantPriceRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.toMap(
+                        VariantPrice::getProductId,
+                        VariantPrice::getAmountCents,
+                        Math::min));
+    }
+
+    // The price comes from another source (the read model), so the response is completed here, not in the mapper.
+    private ProductResponseDTO withPriceFrom(ProductResponseDTO dto, Long priceFromCents) {
+        return new ProductResponseDTO(dto.id(), dto.title(), dto.brand(), dto.description(), dto.status(),
+                dto.category(), dto.variants(), dto.images(), priceFromCents, dto.createdAt(), dto.updatedAt());
     }
 
     /**
