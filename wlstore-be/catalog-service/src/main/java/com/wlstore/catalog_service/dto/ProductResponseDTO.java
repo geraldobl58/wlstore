@@ -13,6 +13,7 @@ public record ProductResponseDTO(
         CategorySummaryDTO category,
         List<ProductVariantResponseDTO> variants,
         List<ProductImageResponseDTO> images,
+        Long priceFromCents,
         Instant createdAt,
         Instant updatedAt
 ) {
