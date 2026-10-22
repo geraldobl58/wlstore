@@ -2,8 +2,8 @@ import { MicrofrontendNav } from '@my-workspace/ui';
 import './global.css';
 
 export const metadata = {
-  title: 'Blog | my-workspace',
-  description: 'Microfrontend de blog',
+  title: 'Catálogo | my-workspace',
+  description: 'Microfrontend de catálogo',
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <MicrofrontendNav active="blog" />
+        <MicrofrontendNav active="catalog" />
         {children}
       </body>
     </html>

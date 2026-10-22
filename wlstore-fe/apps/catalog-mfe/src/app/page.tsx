@@ -1,11 +1,11 @@
-const BlogPage = () => {
+const CatalogPage = () => {
   return (
     <>
       <>
-        <h1>Blog Page</h1>
+        <h1>Catalog Page</h1>
       </>
     </>
   );
 };
 
-export default BlogPage;
+export default CatalogPage;
