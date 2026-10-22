@@ -10,16 +10,14 @@ const nextConfig = {
     root: path.join(__dirname, '..', '..'),
   },
 
-  // Garante que todas as rotas e assets deste microfrontend vivam sob /blog.
-  // É isso que permite ao shell fazer o proxy sem colisão de rotas.
-  basePath: '/blog',
+  // Todas as rotas e assets deste microfrontend vivem sob /catalog. No cluster
+  // o Ingress manda /catalog/* para este app (mesmo valor em ingress.path no
+  // repo de infra); em dev local quem faz isso é o rewrite do shell.
+  basePath: '/catalog',
 
   // Permite que o Next seja servido através do proxy do shell em
   // desenvolvimento (origens diferentes: localhost:3000 -> localhost:4200).
   allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000'],
-
-  // Opcional: caso utilize assets estáticos separados ou CDN dedicada.
-  // assetPrefix: process.env.BLOG_ASSET_PREFIX,
 };
 
 module.exports = nextConfig;

@@ -23,8 +23,8 @@
     "**/*.js",
     "**/*.jsx",
 
-    "../../apps/blog/.next/types/**/*.ts",
-    "../../dist/apps/blog/.next/types/**/*.ts",
+    "../../apps/catalog-mfe/.next/types/**/*.ts",
+    "../../dist/apps/catalog-mfe/.next/types/**/*.ts",
 
     "index.d.ts",
     "next-env.d.ts"
