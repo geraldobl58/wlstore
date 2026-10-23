@@ -22,17 +22,25 @@ import com.wlstore.catalog_service.repository.VariantPriceRepository;
 import com.wlstore.catalog_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
+    // cheapest first; the SKU only breaks ties so the result never depends on database row order
+    private static final Comparator<VariantPrice> CHEAPEST_FIRST =
+            Comparator.comparingLong(VariantPrice::getAmountCents).thenComparing(VariantPrice::getSku);
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final VariantPriceRepository variantPriceRepository;
@@ -62,14 +70,25 @@ public class ProductServiceImpl implements ProductService {
     public PageResponseDTO<ProductResponseDTO> findAll(ProductFilterDTO filter, Pageable pageable) {
         Collection<UUID> categoryIds = resolveCategoryIds(filter);
 
-        Page<Product> products = productRepository
-                .findAll(ProductSpecifications.withFilters(filter, categoryIds), pageable);
+        // priceFromCents is not an attribute of Product: when it is in the sort, the specification builds the
+        // whole ORDER BY and the Pageable carries only the page number and size (Spring would override it otherwise)
+        boolean sortsByPrice = pageable.getSort().getOrderFor(ProductSpecifications.PRICE_SORT) != null;
 
-        Map<UUID, Long> priceFromByProduct = lowestPriceByProduct(
+        Specification<Product> specification = sortsByPrice
+                ? ProductSpecifications.withFilters(filter, categoryIds, pageable.getSort())
+                : ProductSpecifications.withFilters(filter, categoryIds);
+
+        Pageable effectivePageable = sortsByPrice
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize())
+                : pageable;
+
+        Page<Product> products = productRepository.findAll(specification, effectivePageable);
+
+        Map<UUID, VariantPrice> cheapestByProduct = cheapestPriceByProduct(
                 products.getContent().stream().map(Product::getId).toList());
 
         return PageResponseDTO.from(products.map(product ->
-                withPriceFrom(productMapper.toResponseDTO(product), priceFromByProduct.get(product.getId()))));
+                withPriceFrom(productMapper.toResponseDTO(product), cheapestByProduct.get(product.getId()))));
     }
 
     @Override
@@ -129,10 +148,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * One query for the whole page (IN), then the minimum per product. Products without any price
-     * are simply absent from the map, so the caller gets null for them.
+     * One query for the whole page (IN), then the cheapest price row per product. The "from" price and
+     * its original ("de") come from that same row, so the discount is never mixed across variants.
+     * Products without any price are absent from the map.
      */
-    private Map<UUID, Long> lowestPriceByProduct(Collection<UUID> productIds) {
+    private Map<UUID, VariantPrice> cheapestPriceByProduct(Collection<UUID> productIds) {
         if (productIds.isEmpty()) {
             return Map.of();
         }
@@ -140,14 +160,17 @@ public class ProductServiceImpl implements ProductService {
         return variantPriceRepository.findByProductIdIn(productIds).stream()
                 .collect(Collectors.toMap(
                         VariantPrice::getProductId,
-                        VariantPrice::getAmountCents,
-                        Math::min));
+                        Function.identity(),
+                        BinaryOperator.minBy(CHEAPEST_FIRST)));
     }
 
-    // The price comes from another source (the read model), so the response is completed here, not in the mapper.
-    private ProductResponseDTO withPriceFrom(ProductResponseDTO dto, Long priceFromCents) {
+    // The prices come from another source (the read model), so the response is completed here, not in the mapper.
+    private ProductResponseDTO withPriceFrom(ProductResponseDTO dto, VariantPrice cheapest) {
+        Long amount = cheapest == null ? null : cheapest.getAmountCents();
+        Long original = cheapest == null ? null : cheapest.getOriginalAmountCents();
+
         return new ProductResponseDTO(dto.id(), dto.title(), dto.brand(), dto.description(), dto.status(),
-                dto.category(), dto.variants(), dto.images(), priceFromCents, dto.createdAt(), dto.updatedAt());
+                dto.category(), dto.variants(), dto.images(), amount, original, dto.createdAt(), dto.updatedAt());
     }
 
     /**

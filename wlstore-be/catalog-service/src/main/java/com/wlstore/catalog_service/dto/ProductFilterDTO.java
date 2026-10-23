@@ -26,7 +26,17 @@ public record ProductFilterDTO(
 
         @Schema(description = "When false, matches only the exact categoryId instead of its whole subtree",
                 defaultValue = "true")
-        Boolean includeChildren
+        Boolean includeChildren,
+
+        @Schema(description = "Keeps products whose \"from\" price (lowest variant price) is at least this, in cents. "
+                + "Products without any price never match a price filter.",
+                example = "10000")
+        Long minPriceCents,
+
+        @Schema(description = "Keeps products whose \"from\" price (lowest variant price) is at most this, in cents. "
+                + "Products without any price never match a price filter.",
+                example = "150000")
+        Long maxPriceCents
 ) {
     public boolean shouldIncludeSubchildren() {
         return includeChildren == null || includeChildren;

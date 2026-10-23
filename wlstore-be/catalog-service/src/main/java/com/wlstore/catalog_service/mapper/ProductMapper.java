@@ -27,8 +27,9 @@ public interface ProductMapper {
     @Mapping(target = "version", ignore = true)
     Product toEntity(ProductRequestDTO requestDTO);
 
-    // priceFromCents does not live on Product: the service fills it from the price read model
+    // the prices do not live on Product: the service fills them from the price read model
     @Mapping(target = "priceFromCents", ignore = true)
+    @Mapping(target = "originalPriceFromCents", ignore = true)
     ProductResponseDTO toResponseDTO(Product product);
 
     ProductVariantResponseDTO toVariantResponse(ProductVariant variant);
