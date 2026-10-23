@@ -31,7 +31,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 # ---------------------------------------------------------------------------
 # 2. Runtime
 # ---------------------------------------------------------------------------
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 RUN useradd --system --uid 1001 --no-create-home app
