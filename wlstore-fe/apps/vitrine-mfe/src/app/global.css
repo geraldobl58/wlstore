@@ -1,5 +1,0 @@
-/* Tema e tokens WLStore vêm do pacote compartilhado (packages/ui). */
-@import '@wlstore/ui/globals.css';
-
-/* Classes Tailwind usadas neste app. */
-@source '../**/*.{ts,tsx}';
