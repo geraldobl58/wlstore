@@ -1,8 +1,0 @@
-{
-  "name": "http",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/http/src",
-  "projectType": "library",
-  "tags": ["type:lib", "scope:shared"],
-  "targets": {}
-}

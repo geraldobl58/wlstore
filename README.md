@@ -4,6 +4,15 @@ Plataforma de e-commerce **whitelabel** e **multi-tenant**: uma única instalaç
 
 Projeto de estudo aplicado a um produto real.
 
+Este repositório contém só o **backend**. O frontend vive em repositórios
+próprios, cada um com build e deploy independentes:
+
+| Repositório | Conteúdo |
+| --- | --- |
+| [wlstore-vitrine](https://github.com/whitelabel-store/wlstore-vitrine) | Loja (`/`): home, busca, categorias, vitrines |
+| [wlstore-painel](https://github.com/whitelabel-store/wlstore-painel) | Painel do lojista (`/painel`) |
+| [wlstore-platform-fe](https://github.com/whitelabel-store/wlstore-platform-fe) | Pacotes `@whitelabel-store/ui` e `@whitelabel-store/http` |
+
 ## Stack
 
 | Camada | Tecnologia |
