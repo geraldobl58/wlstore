@@ -19,5 +19,5 @@
     "declarationMap": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["dist", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["dist", "**/*.spec.ts", "**/*.test.ts", "**/*.test.tsx"]
 }
