@@ -83,93 +83,33 @@ jobs:
             [
               {
                 "app": "catalog-service",
-                "context": "./wlstore-be",
-                "dockerfile": "./wlstore-be/Dockerfile",
+                "context": ".",
+                "dockerfile": "./Dockerfile",
                 "build-args": "SERVICE=catalog-service",
                 "paths": [
-                  "wlstore-be/catalog-service/",
-                  "wlstore-be/wlstore-common/",
-                  "wlstore-be/pom.xml",
-                  "wlstore-be/Dockerfile",
-                  "wlstore-be/.dockerignore"
+                  "catalog-service/",
+                  "wlstore-common/",
+                  "pom.xml",
+                  "Dockerfile",
+                  ".dockerignore"
                 ],
                 "setup": "java",
-                "test": "cd wlstore-be && mvn -B -ntp -pl catalog-service -am test"
+                "test": "mvn -B -ntp -pl catalog-service -am test"
               },
               {
                 "app": "pricing-service",
-                "context": "./wlstore-be",
-                "dockerfile": "./wlstore-be/Dockerfile",
+                "context": ".",
+                "dockerfile": "./Dockerfile",
                 "build-args": "SERVICE=pricing-service",
                 "paths": [
-                  "wlstore-be/pricing-service/",
-                  "wlstore-be/wlstore-common/",
-                  "wlstore-be/pom.xml",
-                  "wlstore-be/Dockerfile",
-                  "wlstore-be/.dockerignore"
+                  "pricing-service/",
+                  "wlstore-common/",
+                  "pom.xml",
+                  "Dockerfile",
+                  ".dockerignore"
                 ],
                 "setup": "java",
-                "test": "cd wlstore-be && mvn -B -ntp -pl pricing-service -am test"
-              },
-              {
-                "app": "shell",
-                "context": "./wlstore-fe",
-                "dockerfile": "./wlstore-fe/Dockerfile",
-                "build-args": "APP=shell\nPORT=3000",
-                "paths": [
-                  "wlstore-fe/apps/shell/",
-                  "wlstore-fe/packages/",
-                  "wlstore-fe/package.json",
-                  "wlstore-fe/pnpm-lock.yaml",
-                  "wlstore-fe/pnpm-workspace.yaml",
-                  "wlstore-fe/nx.json",
-                  "wlstore-fe/tsconfig.base.json",
-                  "wlstore-fe/tsconfig.json",
-                  "wlstore-fe/Dockerfile",
-                  "wlstore-fe/.dockerignore"
-                ],
-                "setup": "pnpm",
-                "test": "cd wlstore-fe && pnpm install --frozen-lockfile && pnpm nx run-many -t lint typecheck -p shell ui"
-              },
-              {
-                "app": "catalog-mfe",
-                "context": "./wlstore-fe",
-                "dockerfile": "./wlstore-fe/Dockerfile",
-                "build-args": "APP=catalog-mfe\nPORT=4200",
-                "paths": [
-                  "wlstore-fe/apps/catalog-mfe/",
-                  "wlstore-fe/packages/",
-                  "wlstore-fe/package.json",
-                  "wlstore-fe/pnpm-lock.yaml",
-                  "wlstore-fe/pnpm-workspace.yaml",
-                  "wlstore-fe/nx.json",
-                  "wlstore-fe/tsconfig.base.json",
-                  "wlstore-fe/tsconfig.json",
-                  "wlstore-fe/Dockerfile",
-                  "wlstore-fe/.dockerignore"
-                ],
-                "setup": "pnpm",
-                "test": "cd wlstore-fe && pnpm install --frozen-lockfile && pnpm nx run-many -t lint typecheck -p catalog-mfe ui"
-              },
-              {
-                "app": "pricing-mfe",
-                "context": "./wlstore-fe",
-                "dockerfile": "./wlstore-fe/Dockerfile",
-                "build-args": "APP=pricing-mfe\nPORT=4300",
-                "paths": [
-                  "wlstore-fe/apps/pricing-mfe/",
-                  "wlstore-fe/packages/",
-                  "wlstore-fe/package.json",
-                  "wlstore-fe/pnpm-lock.yaml",
-                  "wlstore-fe/pnpm-workspace.yaml",
-                  "wlstore-fe/nx.json",
-                  "wlstore-fe/tsconfig.base.json",
-                  "wlstore-fe/tsconfig.json",
-                  "wlstore-fe/Dockerfile",
-                  "wlstore-fe/.dockerignore"
-                ],
-                "setup": "pnpm",
-                "test": "cd wlstore-fe && pnpm install --frozen-lockfile && pnpm nx run-many -t lint typecheck -p pricing-mfe ui"
+                "test": "mvn -B -ntp -pl pricing-service -am test"
               }
             ]
           EVENT: ${{ github.event_name }}

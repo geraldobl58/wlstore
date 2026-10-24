@@ -10,7 +10,7 @@
 version: 2
 updates:
   - package-ecosystem: maven
-    directory: "/wlstore-be/catalog-service"
+    directory: "/catalog-service"
     target-branch: develop
     schedule:
       interval: weekly
@@ -20,8 +20,9 @@ updates:
       catalog-service-minor-patch:
         update-types: [minor, patch]
 
+
   - package-ecosystem: maven
-    directory: "/wlstore-be/pricing-service"
+    directory: "/pricing-service"
     target-branch: develop
     schedule:
       interval: weekly
@@ -31,8 +32,9 @@ updates:
       pricing-service-minor-patch:
         update-types: [minor, patch]
 
+
   - package-ecosystem: maven
-    directory: "/wlstore-be/wlstore-common"
+    directory: "/wlstore-common"
     target-branch: develop
     schedule:
       interval: weekly
@@ -42,19 +44,9 @@ updates:
       wlstore-common-minor-patch:
         update-types: [minor, patch]
 
-  - package-ecosystem: npm
-    directory: "/wlstore-fe"
-    target-branch: develop
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
-    groups:
-      wlstore-fe-minor-patch:
-        update-types: [minor, patch]
 
   - package-ecosystem: docker
-    directory: "/wlstore-be"
+    directory: "/"
     target-branch: develop
     schedule:
       interval: weekly
@@ -64,16 +56,6 @@ updates:
       docker-be-minor-patch:
         update-types: [minor, patch]
 
-  - package-ecosystem: docker
-    directory: "/wlstore-fe"
-    target-branch: develop
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
-    groups:
-      docker-fe-minor-patch:
-        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: "/"
