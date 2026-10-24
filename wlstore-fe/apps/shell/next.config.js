@@ -34,6 +34,9 @@ const nextConfig = {
     root: path.join(__dirname, '..', '..'),
   },
 
+  // Pacotes do workspace exportam TypeScript puro (sem build); o Next compila.
+  transpilePackages: ['@wlstore/http', '@wlstore/ui', '@wlstore/catalog'],
+
   // Em dev local o shell faz o papel do Ingress: encaminha cada basePath para o
   // seu microfrontend. Como cada mfe usa o próprio basePath, os assets
   // (/<basePath>/_next/*) já caem no rewrite de :path*.

@@ -1,4 +1,4 @@
-# MyWorkspace — Microfrontends com Next.js + Nx
+# WLStore — Microfrontends com Next.js + Nx
 
 Monorepo [Nx](https://nx.dev) com arquitetura de **microfrontends** em Next.js
 ([Multi-Zones](https://nextjs.org/docs/app/guides/multi-zones)). Cada
@@ -27,6 +27,7 @@ domínio**, cada um sob o seu `basePath`.
                        catalog-service    pricing-service   (backend Java)
 
         packages/ui  ← navegação e registro compartilhados por todos
+        packages/http ← cliente HTTP (ky) dos microfrontends
 ```
 
 O usuário enxerga **um único domínio**. Quem decide qual app atende cada
@@ -44,7 +45,9 @@ caminho:
 | `shell` | `apps/shell` | 3000 | `/` | Host: home e layout raiz | — |
 | `catalog-mfe` | `apps/catalog-mfe` | 4200 | `/catalog` | Microfrontend | `catalog-service` |
 | `pricing-mfe` | `apps/pricing-mfe` | 4300 | `/pricing` | Microfrontend | `pricing-service` |
-| `ui` | `packages/ui` | — | — | Lib compartilhada (`@my-workspace/ui`) | — |
+| `ui` | `packages/ui` | — | — | Lib compartilhada (`@wlstore/ui`) | — |
+| `http` | `packages/http` | — | — | Cliente HTTP com ky (`@wlstore/http`) | serviços Java |
+| `catalog` | `packages/catalog` | — | — | Features de catálogo usadas por vários apps, como o menu de categorias (`@wlstore/catalog`). Cada app executa as Server Actions no próprio servidor: defina `CATALOG_API_URL` em todo app que renderiza o menu | `catalog-service` |
 
 ### Decisões de projeto
 
@@ -65,7 +68,7 @@ caminho:
 
 ## Pré-requisitos
 
-- Node.js 20+
+- Node.js 22+ (o `ky`, usado em `packages/http`, exige 22 ou superior)
 - [pnpm](https://pnpm.io) 10+ (`corepack enable`)
 
 ## Começando
@@ -115,16 +118,56 @@ Ingress). Se forem informadas no build, o shell volta a fazer proxy.
 
 ## Código compartilhado
 
-`packages/ui` (`@my-workspace/ui`) é consumido por todos os apps. O Next
+`packages/ui` (`@wlstore/ui`) é consumido por todos os apps. O Next
 transpila a lib direto do source, sem passo de build separado.
 
 ```tsx
-import { MicrofrontendNav, MICROFRONTENDS } from '@my-workspace/ui';
+import { MicrofrontendNav, MICROFRONTENDS } from '@wlstore/ui';
 ```
 
 O registro em [`packages/ui/src/lib/registry.ts`](packages/ui/src/lib/registry.ts)
 é a fonte de verdade da **navegação**. A barra é gerada a partir dele, então um
 app novo aparece na navegação de todos os outros automaticamente.
+
+### UI: shadcn/ui + Tailwind v4
+
+Os componentes shadcn ficam em `packages/ui/src/components/ui` e o tema em
+[`packages/ui/src/styles/globals.css`](packages/ui/src/styles/globals.css), com
+as cores, fontes, raios e sombras do design system WLStore. Cada app importa o
+tema no seu `global.css` (`@import '@wlstore/ui/globals.css'`) e aplica as
+fontes com `fontVariables` no `<html>`.
+
+```tsx
+import { Button } from '@wlstore/ui/components/ui/button';
+
+<Button>Adicionar ao carrinho</Button>
+<p className="text-text-2">Secundário</p>
+<span className="bg-status-success-bg text-status-success-fg">Frete grátis</span>
+```
+
+Para adicionar componentes, rode na raiz `pnpm ui:add dialog sheet` (não use o
+`shadcn add` direto: o script corrige o import de `cn` que o CLI gera errado
+neste monorepo). Use os tokens (`bg-primary`, `text-link`, `bg-brand-50`),
+nunca hex: o lojista troca a escala `--brand-*`.
+
+`packages/http` (`@wlstore/http`) concentra as chamadas aos backends, com ky
+encapsulado e erros normalizados em `ApiError`. Cada microfrontend cria o seu
+cliente, porque a base URL é diferente por serviço:
+
+```ts
+import { createHttpClient, resolveBaseUrl } from '@wlstore/http';
+
+export const catalogHttp = createHttpClient({
+  baseUrl: resolveBaseUrl({
+    server: process.env.CATALOG_API_URL,
+    browser: process.env.NEXT_PUBLIC_CATALOG_API_URL,
+    fallback: 'http://localhost:8081',
+  }),
+  getHeaders: () => ({ 'X-Tenant-Id': tenantId }),
+});
+```
+
+Detalhes em [`packages/http/README.md`](packages/http/README.md).
 
 ---
 
@@ -222,11 +265,11 @@ export const MICROFRONTENDS = [
 Em **`apps/inventory-mfe/src/app/layout.tsx`**:
 
 ```tsx
-import { MicrofrontendNav } from '@my-workspace/ui';
+import { MicrofrontendNav } from '@wlstore/ui';
 import './global.css';
 
 export const metadata = {
-  title: 'Estoque | my-workspace',
+  title: 'Estoque | WLStore',
   description: 'Microfrontend de estoque',
 };
 

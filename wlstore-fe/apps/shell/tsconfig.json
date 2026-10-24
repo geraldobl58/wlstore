@@ -15,17 +15,19 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-
     "../../apps/shell/.next/types/**/*.ts",
     "../../dist/apps/shell/.next/types/**/*.ts",
-
     "index.d.ts",
     "next-env.d.ts"
   ],
@@ -39,6 +41,9 @@
   "references": [
     {
       "path": "../../packages/ui"
+    },
+    {
+      "path": "../../packages/catalog"
     }
   ]
 }

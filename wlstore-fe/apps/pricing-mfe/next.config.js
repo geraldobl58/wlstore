@@ -10,6 +10,9 @@ const nextConfig = {
     root: path.join(__dirname, '..', '..'),
   },
 
+  // Pacotes do workspace exportam TypeScript puro (sem build); o Next compila.
+  transpilePackages: ['@wlstore/http', '@wlstore/ui', '@wlstore/catalog'],
+
   // Todas as rotas e assets deste microfrontend vivem sob /pricing. No cluster
   // o Ingress manda /pricing/* para este app (mesmo valor em ingress.path no
   // repo de infra); em dev local quem faz isso é o rewrite do shell.

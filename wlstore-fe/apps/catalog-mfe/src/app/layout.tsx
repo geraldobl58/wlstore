@@ -1,8 +1,10 @@
-import { MicrofrontendNav } from '@my-workspace/ui';
+import { CategoryMenu } from '@wlstore/catalog';
+import { MicrofrontendNav, QueryProvider } from '@wlstore/ui';
+import { fontVariables } from '@wlstore/ui/lib/fonts';
 import './global.css';
 
 export const metadata = {
-  title: 'Catálogo | my-workspace',
+  title: 'Catálogo | WLStore',
   description: 'Microfrontend de catálogo',
 };
 
@@ -12,10 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={fontVariables}>
       <body>
-        <MicrofrontendNav active="catalog" />
-        {children}
+        <QueryProvider>
+          <MicrofrontendNav active="catalog" />
+          <CategoryMenu />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
