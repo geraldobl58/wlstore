@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "lib": ["es2022", "dom"],
+    "types": [],
+    // A lib é consumida direto pelo bundler do Next (via source), então usamos
+    // resolução de bundler em vez do nodenext herdado do tsconfig.base.json.
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "composite": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "**/*.spec.ts", "**/*.test.ts"]
+}

@@ -7,13 +7,13 @@
       "path": "./packages/ui"
     },
     {
-      "path": "./apps/shell"
+      "path": "./packages/http"
     },
     {
-      "path": "./apps/catalog-mfe"
+      "path": "./apps/vitrine-mfe"
     },
     {
-      "path": "./apps/pricing-mfe"
+      "path": "./apps/painel-mfe"
     }
   ]
 }

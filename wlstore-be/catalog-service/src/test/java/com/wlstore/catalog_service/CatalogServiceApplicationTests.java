@@ -13,6 +13,6 @@ class CatalogServiceApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoadsAndAllMigrationsAreApplied() {
-		assertThat(flyway.info().applied()).hasSize(5);
+		assertThat(flyway.info().applied()).hasSize(6);
 	}
 }

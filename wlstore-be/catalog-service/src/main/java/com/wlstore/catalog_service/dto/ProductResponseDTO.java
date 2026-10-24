@@ -14,6 +14,7 @@ public record ProductResponseDTO(
         List<ProductVariantResponseDTO> variants,
         List<ProductImageResponseDTO> images,
         Long priceFromCents,
+        Long originalPriceFromCents,
         Instant createdAt,
         Instant updatedAt
 ) {

@@ -1,6 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@wlstore/ui/*": [
+        "./src/*"
+      ]
+    }
+  },
   "files": [],
   "include": [],
-  "references": [{ "path": "./tsconfig.lib.json" }]
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
 }

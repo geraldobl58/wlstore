@@ -5,8 +5,7 @@
 # a raiz do monorepo (onde ficam nx.json e pnpm-lock.yaml), e cada app vira uma
 # imagem:
 #
-#   docker build --build-arg APP=shell --build-arg PORT=3000 \
-#     --build-arg BUILD_ENV="NEXT_PUBLIC_API_URL=http://catalog-service:8081" -t shell .
+#   docker build --build-arg APP=vitrine-mfe --build-arg PORT=3000 -t vitrine-mfe .
 #
 # BUILD_ENV: variáveis que o Next lê no BUILD (rewrites do next.config,
 # NEXT_PUBLIC_*), separadas por espaço. Elas ficam embutidas na imagem — use

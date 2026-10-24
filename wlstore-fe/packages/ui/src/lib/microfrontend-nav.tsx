@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { cn } from './utils';
 import { MICROFRONTENDS } from './registry';
 
 export interface NavItem {
@@ -12,26 +12,6 @@ export interface MicrofrontendNavProps {
   active: string;
 }
 
-const bar: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.5rem',
-  padding: '0.75rem 1.5rem',
-  borderBottom: '1px solid #e5e7eb',
-  fontFamily: 'system-ui, -apple-system, sans-serif',
-  fontSize: '0.9rem',
-};
-
-const brand: CSSProperties = { fontWeight: 700, marginRight: 'auto' };
-
-function linkStyle(isActive: boolean): CSSProperties {
-  return {
-    color: isActive ? '#0f172a' : '#64748b',
-    fontWeight: isActive ? 600 : 400,
-    textDecoration: 'none',
-  };
-}
-
 /**
  * Barra de navegação compartilhada entre todos os microfrontends.
  *
@@ -41,10 +21,18 @@ function linkStyle(isActive: boolean): CSSProperties {
  */
 export function MicrofrontendNav({ active }: MicrofrontendNavProps) {
   return (
-    <nav style={bar}>
-      <span style={brand}>my-workspace</span>
+    <nav className="flex items-center gap-6 border-b bg-card px-6 py-3 text-sm">
+      <span className="mr-auto font-heading text-base font-bold text-text">WLStore</span>
       {MICROFRONTENDS.map((mfe) => (
-        <a key={mfe.key} href={mfe.basePath} style={linkStyle(mfe.key === active)}>
+        <a
+          key={mfe.key}
+          href={mfe.basePath}
+          aria-current={mfe.key === active ? 'page' : undefined}
+          className={cn(
+            'rounded-sm px-2 py-1 transition-colors duration-120 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+            mfe.key === active ? 'font-semibold text-brand-ink' : 'text-text-2',
+          )}
+        >
           {mfe.label}
         </a>
       ))}

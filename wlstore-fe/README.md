@@ -1,10 +1,13 @@
-# MyWorkspace — Microfrontends com Next.js + Nx
+# WLStore — Microfrontends com Next.js + Nx
 
 Monorepo [Nx](https://nx.dev) com arquitetura de **microfrontends** em Next.js
 ([Multi-Zones](https://nextjs.org/docs/app/guides/multi-zones)). Cada
-microfrontend é uma aplicação Next independente (build, deploy e runtime
-próprios) e espelha um serviço do backend. Todos são servidos **no mesmo
-domínio**, cada um sob o seu `basePath`.
+microfrontend é uma aplicação Next **independente**: build, deploy, versão e
+runtime próprios, sem importar código de nenhum outro app. Todos são servidos
+**no mesmo domínio**, cada um sob o seu `basePath`.
+
+Os apps se dividem por **área do produto**, não por serviço do backend: a
+vitrine mostra dados de catálogo, preço e estoque, mas é um app só.
 
 ## Arquitetura
 
@@ -12,61 +15,80 @@ domínio**, cada um sob o seu `basePath`.
                          navegador
                              │
                              ▼
-       ┌──────────────────────────────────────────────┐
-       │  cluster: NGINX Ingress (develop.wlstore.local)│
-       │  dev local: o próprio shell (rewrites)         │
-       └─────┬────────────────┬─────────────────┬──────┘
-             │ /              │ /catalog/*      │ /pricing/*
-             ▼                ▼                 ▼
-     ┌──────────────┐ ┌────────────────┐ ┌────────────────┐
-     │ shell :3000  │ │ catalog-mfe    │ │ pricing-mfe    │
-     │ basePath: /  │ │ :4200          │ │ :4300          │
-     │ (host)       │ │ /catalog       │ │ /pricing       │
-     └──────────────┘ └───────┬────────┘ └───────┬────────┘
-                              │                  │
-                       catalog-service    pricing-service   (backend Java)
+       ┌───────────────────────────────────────────────┐
+       │  cluster: NGINX Ingress (develop.wlstore.local) │
+       │  dev local: rewrites da vitrine (app padrão)    │
+       └──────────────┬─────────────────────┬────────────┘
+                      │ /  (todo o resto)   │ /painel/*
+                      ▼                     ▼
+             ┌─────────────────┐   ┌─────────────────┐
+             │ vitrine-mfe     │   │ painel-mfe      │
+             │ :3000           │   │ :4300           │
+             │ basePath: /     │   │ /painel         │
+             └───────┬─────────┘   └────────┬────────┘
+                     │                      │
+          catalog-service (+ preço       pricing-service
+          copiado por eventos)           (backend Java)
 
-        packages/ui  ← navegação e registro compartilhados por todos
+   packages/ui   ← design system, StoreHeader/StoreFooter (versionado)
+   packages/http ← cliente HTTP (ky) (versionado)
 ```
 
 O usuário enxerga **um único domínio**. Quem decide qual app atende cada
 caminho:
 
-- **No cluster:** o NGINX Ingress. O shell não faz proxy e não conhece os mfes
-  no build. Por isso um time publica o seu mfe sem rebuildar o shell.
-- **Em dev local** (`pnpm dev`): o shell faz o papel do Ingress, com `rewrites`
-  para a porta local de cada mfe.
+- **No cluster:** o NGINX Ingress. Nenhum app conhece os outros no build, e
+  cada time publica o seu sem rebuildar ninguém.
+- **Em dev local** (`pnpm dev`): a vitrine, app padrão em `/`, faz o papel do
+  Ingress com `rewrites` para a porta local de cada app.
 
 ### Projetos
 
 | Projeto | Caminho | Porta (dev) | `basePath` | Papel | Backend |
 | --- | --- | --- | --- | --- | --- |
-| `shell` | `apps/shell` | 3000 | `/` | Host: home e layout raiz | — |
-| `catalog-mfe` | `apps/catalog-mfe` | 4200 | `/catalog` | Microfrontend | `catalog-service` |
-| `pricing-mfe` | `apps/pricing-mfe` | 4300 | `/pricing` | Microfrontend | `pricing-service` |
-| `ui` | `packages/ui` | — | — | Lib compartilhada (`@my-workspace/ui`) | — |
+| `vitrine-mfe` | `apps/vitrine-mfe` | 3000 | `/` | Loja: home, busca, menu de categorias, vitrines e listagens, exibição de preço | `catalog-service` |
+| `painel-mfe` | `apps/painel-mfe` | 4300 | `/painel` | Painel do lojista: gestão de preços (depois estoque e pedidos) | `pricing-service` |
+| `ui` | `packages/ui` | — | — | Design system, `StoreHeader`, `StoreFooter` (`@wlstore/ui`) | — |
+| `http` | `packages/http` | — | — | Cliente HTTP com ky (`@wlstore/http`) | serviços Java |
+
+### Regras
+
+- **Um app nunca importa outro.** A regra `@nx/enforce-module-boundaries`
+  barra no lint. O que um app mostra é dele: o card de produto, o preço no card
+  e o menu de categorias são da vitrine.
+- **`packages/` é só plataforma, sem domínio:** design system, cabeçalho,
+  rodapé e cliente HTTP. O cabeçalho é estrutura com espaços (`actions`,
+  `children`), e cada app preenche com o seu conteúdo.
+- **Pacotes de plataforma serão versionados.** Hoje os apps usam
+  `workspace:*`; com a separação em repositórios, `ui` e `http` passam a ser
+  publicados com versão, e cada app atualiza quando quiser.
+- **Comunicação entre apps** só por URL (links, filtros, busca), cookie de
+  sessão e backend. Nada de estado JavaScript compartilhado.
+- **Dados de vários serviços na mesma tela:** em listas, o catálogo traz uma
+  cópia (ex.: `priceFromCents`, atualizado por eventos do pricing-service). Na
+  tela de um item só, a Server Action do app consulta os serviços em paralelo.
 
 ### Decisões de projeto
 
 - **`basePath` por microfrontend.** Cada app serve tudo sob o próprio prefixo,
-  o que evita colisão de rotas. Os assets do Next (`/catalog/_next/*`) caem na
-  mesma regra de roteamento das páginas, sem regra extra.
-- **Roteamento fora do shell em produção.** O Ingress roteia por prefixo. O
-  shell só tem links (`<a href="/catalog">`), e o deploy de um mfe não depende
-  do shell.
+  o que evita colisão de rotas. Os assets do Next (`/painel/_next/*`) caem na
+  mesma regra de roteamento das páginas. A vitrine, app padrão, não tem
+  `basePath`.
+- **Roteamento fora dos apps em produção.** O Ingress roteia por prefixo. Os
+  `rewrites` da vitrine só existem em dev.
 - **Portas fixas** (só para dev local), definidas no `project.json` de cada app
-  e repetidas na lista do `next.config.js` do shell.
+  e repetidas na lista `MICROFRONTENDS` do `next.config.js` da vitrine.
 - **Navegação entre microfrontends usa `<a>`, não `next/link`.** Cada app é um
   runtime Next separado, então a navegação entre eles é uma navegação de
-  documento completa. `next/link` faria client-side routing para uma rota que
-  não existe no app atual.
-- **Isolamento de runtime.** Um microfrontend que cai derruba apenas a sua
-  própria rota; o resto do site continua no ar.
+  documento completa. Dentro do mesmo app, use `next/link`.
+- **Isolamento de runtime.** Um microfrontend que cai derruba apenas as suas
+  rotas; o resto do site continua no ar.
 
 ## Pré-requisitos
 
-- Node.js 20+
+- Node.js 22+ (o `ky`, usado em `packages/http`, exige 22 ou superior)
 - [pnpm](https://pnpm.io) 10+ (`corepack enable`)
+- Backend rodando (`catalog-service` em `:8081`) para a vitrine ter dados
 
 ## Começando
 
@@ -77,76 +99,111 @@ pnpm dev
 
 Acesse:
 
-- <http://localhost:3000> — shell
-- <http://localhost:3000/catalog> — catálogo **servido através do shell** (como o usuário acessa)
-- <http://localhost:3000/pricing> — preços, idem
-- <http://localhost:4200/catalog> e <http://localhost:4300/pricing> — cada mfe isolado (útil para depurar)
+- <http://localhost:3000> — vitrine (como o usuário acessa)
+- <http://localhost:3000/painel> — painel do lojista, **servido através da vitrine**
+- <http://localhost:4300/painel> — painel isolado (útil para depurar)
 
-> `pnpm dev` roda `nx run shell:dev`, que via `dependsOn` sobe automaticamente
-> os microfrontends junto. Não é preciso abrir vários terminais.
+> `pnpm dev` roda `nx run vitrine-mfe:dev`, que via `dependsOn` sobe o painel
+> junto. É só conveniência de dev: não existe dependência de build entre os
+> apps.
 
 ## Scripts
 
 | Comando | O que faz |
 | --- | --- |
-| `pnpm dev` | Sobe o shell **e** seus microfrontends |
+| `pnpm dev` | Sobe a vitrine **e** os outros apps |
 | `pnpm dev:all` | Sobe todos os apps em paralelo |
 | `pnpm build` | Build de produção de todos os projetos |
 | `pnpm start` | Sobe todos os apps em modo produção |
 | `pnpm lint` | ESLint em todo o workspace |
+| `pnpm test` | Testes (Vitest) de todos os projetos |
 | `pnpm typecheck` | Checagem de tipos |
 | `pnpm graph` | Abre o grafo de dependências do Nx |
 
-Para um projeto específico: `npx nx <target> <projeto>` (ex.: `npx nx build catalog-mfe`).
+Para um projeto específico: `npx nx <target> <projeto>` (ex.: `npx nx build painel-mfe`).
 
 ## Variáveis de ambiente
 
-Em dev local o shell encaminha cada mfe para `http://localhost:<porta>`. Para
-apontar um mfe para outro endereço (ex.: depurar contra um mfe remoto), use a
-variável dele:
+| Variável | App | Padrão | Descrição |
+| --- | --- | --- | --- |
+| `CATALOG_API_URL` | vitrine-mfe | `http://localhost:8081` | catalog-service (chamado só no servidor) |
+| `TENANT_ID` | vitrine-mfe | tenant de dev | Tenant das chamadas, até existir login |
+| `PAINEL_URL` | vitrine-mfe (dev) | `http://localhost:4300` | Para onde a vitrine encaminha `/painel` em dev |
 
-| Variável | Padrão em dev | Descrição |
-| --- | --- | --- |
-| `CATALOG_URL` | `http://localhost:4200` | URL base do `catalog-mfe` |
-| `PRICING_URL` | `http://localhost:4300` | URL base do `pricing-mfe` |
-
-No **build de produção** essas variáveis não são usadas (o roteamento é do
-Ingress). Se forem informadas no build, o shell volta a fazer proxy.
+No **build de produção** o `PAINEL_URL` não é usado (o roteamento é do
+Ingress). Se for informado no build, a vitrine volta a fazer proxy.
 
 ## Código compartilhado
 
-`packages/ui` (`@my-workspace/ui`) é consumido por todos os apps. O Next
-transpila a lib direto do source, sem passo de build separado.
+### UI: shadcn/ui + Tailwind v4
+
+Os componentes shadcn ficam em `packages/ui/src/components/ui` e o tema em
+[`packages/ui/src/styles/globals.css`](packages/ui/src/styles/globals.css), com
+as cores, fontes, raios e sombras do design system WLStore. Cada app importa o
+tema no seu `global.css` (`@import '@wlstore/ui/globals.css'`) e aplica as
+fontes com `fontVariables` no `<html>`.
 
 ```tsx
-import { MicrofrontendNav, MICROFRONTENDS } from '@my-workspace/ui';
+import { StoreFooter, StoreHeader } from '@wlstore/ui';
+import { Button } from '@wlstore/ui/components/ui/button';
+
+<StoreHeader storeName="WLStore" search={{ action: '/' }}>
+  {/* linha extra do app, ex.: menu de categorias */}
+</StoreHeader>
+<Button>Adicionar ao carrinho</Button>
 ```
 
-O registro em [`packages/ui/src/lib/registry.ts`](packages/ui/src/lib/registry.ts)
-é a fonte de verdade da **navegação**. A barra é gerada a partir dele, então um
-app novo aparece na navegação de todos os outros automaticamente.
+Para adicionar componentes shadcn, rode na raiz `pnpm ui:add dialog sheet`
+(não use o `shadcn add` direto: o script corrige o import de `cn` que o CLI gera
+errado neste monorepo). Use os tokens (`bg-primary`, `text-link`,
+`bg-brand-50`), nunca hex: o lojista troca a escala `--brand-*`.
+
+### HTTP
+
+`packages/http` (`@wlstore/http`) encapsula o ky e normaliza erros em
+`ApiError`. Cada app cria o seu cliente em `src/config/api.ts`, porque a base
+URL é diferente por serviço:
+
+```ts
+import { createHttpClient, resolveBaseUrl } from '@wlstore/http';
+
+export const api = createHttpClient({
+  baseUrl: resolveBaseUrl({
+    server: process.env.CATALOG_API_URL,
+    fallback: 'http://localhost:8081',
+  }),
+  getHeaders: () => ({ 'X-Tenant-Id': tenantId }),
+});
+```
+
+### Features
+
+Cada app organiza o seu código em `src/features/<feature>/` (`actions/`,
+`components/`, `hooks/`, `http/`, `types/`), conforme
+[`skills/SKILLS.md`](skills/SKILLS.md): componente → hook (TanStack Query) →
+Server Action → `http/` → backend, com testes ao lado de cada arquivo.
 
 ---
 
 ## Como criar um novo microfrontend
 
-O exemplo cria o **`inventory-mfe`**, servido em `/inventory`, na porta
-**4400**, espelhando o `inventory-service`. Troque nome, caminho e porta
-conforme o seu caso.
+O exemplo cria o **`checkout-mfe`**, servido em `/checkout`, na porta **4400**.
+Troque nome, caminho e porta conforme o seu caso.
 
-> **Convenção:** nome `<domínio>-mfe`, `basePath` `/<domínio>`, portas locais a
-> partir de 4200 (`catalog` 4200, `pricing` 4300, o próximo 4400…). Duas
-> portas iguais fazem o segundo app falhar ao subir em dev.
+> **Convenção:** um app por **área do produto** (checkout, conta, painel), nome
+> `<area>-mfe`, `basePath` `/<area>`, portas locais a partir de 4300
+> (`painel` 4300, o próximo 4400…). Duas portas iguais fazem o segundo app
+> falhar ao subir em dev.
 
 ### 1. Gere a aplicação
 
 ```sh
-npx nx g @nx/next:app apps/inventory-mfe --style=none --linter=eslint --e2eTestRunner=none
+npx nx g @nx/next:app apps/checkout-mfe --style=none --linter=eslint --e2eTestRunner=none
 ```
 
 ### 2. Configure o `basePath` e a porta
 
-**`apps/inventory-mfe/next.config.js`**:
+**`apps/checkout-mfe/next.config.js`**:
 
 ```js
 //@ts-check
@@ -158,16 +215,15 @@ const nextConfig = {
   turbopack: {
     root: path.join(__dirname, '..', '..'),
   },
-
-  basePath: '/inventory',
-
+  transpilePackages: ['@wlstore/http', '@wlstore/ui'],
+  basePath: '/checkout',
   allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000'],
 };
 
 module.exports = nextConfig;
 ```
 
-**`apps/inventory-mfe/project.json`**, com a porta fixa nos targets:
+**`apps/checkout-mfe/project.json`**, com a porta fixa nos targets:
 
 ```json
 {
@@ -179,120 +235,57 @@ module.exports = nextConfig;
 }
 ```
 
-### 3. Registre a rota de dev no shell
+### 3. Registre a rota de dev na vitrine
 
-Em **`apps/shell/next.config.js`**, adicione uma linha na lista
+Em **`apps/vitrine-mfe/next.config.js`**, adicione uma linha na lista
 `MICROFRONTENDS`:
 
 ```js
 const MICROFRONTENDS = [
-  { basePath: '/catalog', env: 'CATALOG_URL', port: 4200 },
-  { basePath: '/pricing', env: 'PRICING_URL', port: 4300 },
-  { basePath: '/inventory', env: 'INVENTORY_URL', port: 4400 },
+  { basePath: '/painel', env: 'PAINEL_URL', port: 4300 },
+  { basePath: '/checkout', env: 'CHECKOUT_URL', port: 4400 },
 ];
 ```
 
-Isso só vale para `pnpm dev`. Em produção, quem roteia é o Ingress (passo 8).
+E inclua o app no `dependsOn` do `dev` em **`apps/vitrine-mfe/project.json`**,
+para subir junto no `pnpm dev`. Isso só vale para dev; em produção, quem roteia
+é o Ingress.
 
-### 4. Suba o app junto com o shell
+### 4. Adicione ao registro e use o cabeçalho da loja
 
-Em **`apps/shell/project.json`**, inclua o novo projeto no `dependsOn` do `dev`:
+Em **`packages/ui/src/lib/registry.ts`**, uma entrada nova em `MICROFRONTENDS`.
+No layout do app, use `StoreHeader` e `StoreFooter` do `@wlstore/ui`, como na
+vitrine.
 
-```json
-"dependsOn": [
-  { "projects": ["catalog-mfe", "pricing-mfe", "inventory-mfe"], "target": "dev" }
-]
-```
-
-### 5. Adicione ao registro compartilhado
-
-Em **`packages/ui/src/lib/registry.ts`**:
-
-```ts
-export const MICROFRONTENDS = [
-  { key: 'shell', label: 'Home', basePath: '/' },
-  { key: 'catalog', label: 'Catálogo', basePath: '/catalog' },
-  { key: 'pricing', label: 'Preços', basePath: '/pricing' },
-  { key: 'inventory', label: 'Estoque', basePath: '/inventory' },
-] as const;
-```
-
-### 6. Use o layout compartilhado
-
-Em **`apps/inventory-mfe/src/app/layout.tsx`**:
-
-```tsx
-import { MicrofrontendNav } from '@my-workspace/ui';
-import './global.css';
-
-export const metadata = {
-  title: 'Estoque | my-workspace',
-  description: 'Microfrontend de estoque',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="pt-BR">
-      <body>
-        <MicrofrontendNav active="inventory" />
-        {children}
-      </body>
-    </html>
-  );
-}
-```
-
-### 7. Sincronize e valide
+### 5. Sincronize e valide
 
 ```sh
-pnpm install          # linka o app ao workspace pnpm
+pnpm install
 npx nx sync           # atualiza as referências de projeto do TypeScript
-pnpm typecheck
-pnpm build
+pnpm lint && pnpm test && pnpm build
 pnpm dev
 ```
 
-Confirme que <http://localhost:3000/inventory> responde **através do shell**
-(não só em `localhost:4400`) e que a navegação alterna entre os microfrontends.
+Confirme que <http://localhost:3000/checkout> responde **através da vitrine**.
 
-### 8. Deploy (CI + infra)
+### 6. Deploy
 
-1. **CI deste repo**: em `.github/workflows/deploy.yml`, adicione um item no
-   `APPS_JSON` do job `plan`:
-   ```json
-   {
-     "app": "inventory-mfe",
-     "context": "./wlstore-fe",
-     "dockerfile": "./wlstore-fe/Dockerfile",
-     "build-args": "APP=inventory-mfe\nPORT=4400",
-     "paths": ["wlstore-fe/apps/inventory-mfe/", "wlstore-fe/packages/", "..."]
-   }
-   ```
-   Copie os demais `paths` do `catalog-mfe`.
-2. **Repo de infra**: crie `projects/wlstore/apps/inventory-mfe/` copiando o
-   `pricing-mfe/` e trocando nome, porta (`service.port: 4400`) e caminho
-   (`ingress.path` e probes em `/inventory`). O `ingress.host` fica igual ao
-   do shell.
-3. Faça commit e push dos dois repos. O ArgoCD cria
-   `wlstore-inventory-mfe-<env>` sozinho, e o Ingress passa a mandar
-   `/inventory/*` para o app novo, **sem rebuild do shell**.
+1. **CI:** um item no `APPS_JSON` do workflow de deploy (`APP=checkout-mfe`,
+   `PORT=4400`).
+2. **Infra:** `projects/wlstore/apps/checkout-mfe/` no repo de infra, com
+   `service.port: 4400` e `ingress.path` e probes em `/checkout`, no mesmo
+   `ingress.host` da vitrine.
 
 ### Checklist
 
-- [ ] App gerado em `apps/<nome>-mfe`
-- [ ] `basePath: '/<nome>'` no `next.config.js`
+- [ ] App gerado em `apps/<area>-mfe`
+- [ ] `basePath: '/<area>'` e `transpilePackages` no `next.config.js`
 - [ ] Porta única fixada nos targets do `project.json`
-- [ ] Linha na lista `MICROFRONTENDS` do `next.config.js` do shell (dev)
-- [ ] `dependsOn` do `shell:dev` atualizado
+- [ ] Linha na lista `MICROFRONTENDS` do `next.config.js` da vitrine e no `dependsOn` do dev
 - [ ] Entrada nova em `MICROFRONTENDS` do `registry.ts`
-- [ ] `<MicrofrontendNav active="<nome>" />` no layout
-- [ ] `npx nx sync` executado, `pnpm typecheck` e `pnpm build` passando
-- [ ] Item no `APPS_JSON` do workflow
-- [ ] `projects/wlstore/apps/<nome>-mfe/` no repo de infra (`ingress.path` == `basePath`)
+- [ ] `StoreHeader`/`StoreFooter` no layout
+- [ ] `npx nx sync`, `pnpm lint`, `pnpm test` e `pnpm build` passando
+- [ ] Item no workflow de deploy e pasta no repo de infra (`ingress.path` == `basePath`)
 
 ---
 
@@ -302,14 +295,15 @@ Cada microfrontend é uma imagem e um deploy independentes. Um único
 [`Dockerfile`](Dockerfile) serve todos os apps (`--build-arg APP=<app>
 --build-arg PORT=<porta>`).
 
-- **CI** (`.github/workflows/deploy.yml`): builda e faz deploy **só dos apps
-  afetados** pelo push. Push na `develop` vai para o ambiente develop; merge na
-  `main` vai para prod.
 - **Roteamento:** no repo de infra, todos os fronts dividem o `ingress.host` do
-  ambiente, e cada mfe tem `ingress.path` igual ao seu `basePath`. Não faça
-  strip do prefixo no Ingress: o app espera recebê-lo.
+  ambiente, e cada app tem `ingress.path` igual ao seu `basePath` (a vitrine
+  fica em `/`). Não faça strip do prefixo no Ingress: o app espera recebê-lo.
+- **Migração pendente:** o workflow de deploy (`.github/workflows/deploy.yml`
+  na raiz do repo) e o repo de infra ainda descrevem `shell`, `catalog-mfe` e
+  `pricing-mfe`. Eles serão refeitos na separação em repositórios, com
+  `vitrine-mfe` (`/`, porta 3000) e `painel-mfe` (`/painel`, porta 4300).
 
-Localmente, o Nx também detecta os projetos afetados:
+Localmente, o Nx detecta os projetos afetados:
 
 ```sh
 npx nx affected -t build
@@ -319,12 +313,14 @@ npx nx affected -t build
 
 | Sintoma | Causa provável |
 | --- | --- |
-| `/<mfe>` retorna 404 no `pnpm dev` | O mfe não está no ar, falta a linha na lista do `next.config.js` do shell, ou a porta diverge |
-| `/<mfe>` retorna 404 no cluster | Falta o app em `projects/wlstore/apps/`, ou `ingress.path` ≠ `basePath` |
-| Página do microfrontend sem CSS/JS | O `basePath` diverge do prefixo da rota (`ingress.path` ou rewrite) |
+| `/<app>` retorna 404 no `pnpm dev` | O app não está no ar, falta a linha na lista do `next.config.js` da vitrine, ou a porta diverge |
+| `/<app>` retorna 404 no cluster | Falta o app em `projects/wlstore/apps/`, ou `ingress.path` ≠ `basePath` |
+| Página de um app sem CSS/JS | O `basePath` diverge do prefixo da rota (`ingress.path` ou rewrite) |
+| Vitrine com "Não foi possível carregar os produtos" | catalog-service fora do ar, ou `CATALOG_API_URL` errado |
 | `EADDRINUSE` ao subir | Dois projetos com a mesma porta em `project.json` |
-| Aviso de cross-origin em dev | Falta `allowedDevOrigins: ['localhost:3000']` no config do microfrontend |
+| Aviso de cross-origin em dev | Falta `allowedDevOrigins: ['localhost:3000']` no config do app |
 | `The workspace is out of sync` | Rode `npx nx sync` |
+| `Imports of apps are forbidden` no lint | Um app importou código de outro; mova para o app dono ou para um pacote de plataforma |
 | Link entre microfrontends recarrega errado | Uso de `next/link` no lugar de `<a>` para rota de outro app |
 
 ## Saiba mais
@@ -332,5 +328,5 @@ npx nx affected -t build
 - [Next.js — Multi-Zones](https://nextjs.org/docs/app/guides/multi-zones)
 - [Next.js — basePath](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath)
 - [Next.js — rewrites](https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites)
-- [Nx — Next.js](https://nx.dev/docs/technologies/react/next)
+- [Vercel — Microfrontends](https://vercel.com/docs/microfrontends)
 - [Nx — affected](https://nx.dev/ci/features/affected)

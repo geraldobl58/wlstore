@@ -1,0 +1,392 @@
+/*
+ * Tema compartilhado de todos os apps (shell e microfrontends).
+ *
+ * Fonte dos valores: design system WLStore
+ * (https://claude.ai/artifact/G96ijfoaWPCR8ss4cMTYrV). Três camadas:
+ *
+ * 1. Tokens WLStore (--brand-*, --neutral-*, --coral-*, --status-*…), com os
+ *    mesmos nomes do design system.
+ * 2. Variáveis semânticas do shadcn (--primary, --background…), apontando para
+ *    os tokens da camada 1. São elas que os componentes em components/ui usam.
+ * 3. @theme inline: expõe as duas camadas como utilitários do Tailwind
+ *    (bg-primary, text-brand-ink, bg-status-danger-bg, font-heading…).
+ *
+ * Whitelabel: o lojista troca só a escala --brand-*. Ao redeclará-la num escopo
+ * mais baixo que :root, redeclare também os derivados (--action*, --link,
+ * --brand-ink, --focus, --action-soft, --primary, --ring…), porque var()
+ * declarado em :root não acompanha a troca.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Classes usadas nos componentes deste pacote. Cada app declara as suas. */
+@source '../**/*.{ts,tsx}';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Marca (violeta padrão; substituída pelo lojista) */
+  --brand-50: #f1eeff;
+  --brand-100: #e6e0ff;
+  --brand-200: #cfc4ff;
+  --brand-300: #b2a0ff;
+  --brand-400: #8f74ff;
+  --brand-500: #6d4aff;
+  --brand-600: #5a32e6;
+  --brand-700: #4a26c2;
+  --brand-800: #3b2096;
+  --brand-900: #2b176c;
+
+  /* Neutro */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8f9fc;
+  --neutral-100: #f0f2f8;
+  --neutral-200: #e3e7f0;
+  --neutral-300: #cbd2e1;
+  --neutral-400: #9aa4bc;
+  --neutral-500: #6b7592;
+  --neutral-600: #4a5470;
+  --neutral-700: #343c54;
+  --neutral-800: #1f253a;
+  --neutral-900: #12162a;
+  --neutral-950: #0b0e1c;
+
+  /* Destaques comerciais (nunca mudam com a marca) */
+  --coral-500: #ff4d6d;
+  --coral-600: #e0294d;
+  --teal-500: #00b8a0;
+  --teal-700: #00776a;
+  --amber-500: #ffb020;
+  --amber-800: #8a5a00;
+  --ink-on-accent: #0b0e1c;
+  --coral-text: #e0294d;
+  --teal-text: #00776a;
+  --amber-text: #8a5a00;
+
+  /* Superfícies e texto */
+  --bg-page: var(--neutral-50);
+  --bg-card: var(--neutral-0);
+  --bg-elevated: var(--neutral-0);
+  --bg-subtle: var(--neutral-100);
+  --bg-disabled: var(--neutral-200);
+  --border-default: var(--neutral-200);
+  --border-control: var(--neutral-500);
+  --text: var(--neutral-900);
+  --text-2: var(--neutral-600);
+  --text-3: var(--neutral-500);
+  --text-disabled: var(--neutral-400);
+
+  /* Ação e marca derivadas */
+  --link: var(--brand-600);
+  --action: var(--brand-500);
+  --action-hover: var(--brand-600);
+  --action-active: var(--brand-700);
+  --on-action: #ffffff;
+  --action-soft: var(--brand-100);
+  --focus: var(--brand-500);
+  --brand-ink: var(--brand-700);
+
+  /* Estados (nunca mudam com a marca) */
+  --status-success-bg: #e7f8ef;
+  --status-success-fg: #0b7f48;
+  --status-success-solid: #0b7f48;
+  --status-success-on: #ffffff;
+  --status-warning-bg: #fff1d0;
+  --status-warning-fg: #8a5a00;
+  --status-warning-solid: #ffb020;
+  --status-warning-on: #0b0e1c;
+  --status-danger-bg: #fee8e6;
+  --status-danger-fg: #b42318;
+  --status-danger-solid: #d92d20;
+  --status-danger-on: #ffffff;
+  --status-info-bg: #e6f0ff;
+  --status-info-fg: #1250b0;
+  --status-info-solid: #1570ef;
+  --status-info-on: #ffffff;
+  --status-neutral-bg: #f0f2f8;
+  --status-neutral-fg: #4a5470;
+  --status-neutral-solid: #4a5470;
+  --status-neutral-on: #ffffff;
+  --status-brand-bg: var(--brand-100);
+  --status-brand-fg: var(--brand-ink);
+  --status-brand-solid: var(--brand-500);
+
+  /* Gráficos */
+  --chart-violet: #6d4aff;
+  --chart-teal: #009985;
+  --chart-coral: #e0294d;
+  --chart-amber: #c77700;
+  --chart-blue: #1570ef;
+  --chart-gray: #6b7592;
+
+  /* Sombras */
+  --elevation-sm: 0 1px 2px rgba(18, 22, 42, 0.06);
+  --elevation-md: 0 4px 12px rgba(18, 22, 42, 0.08);
+  --elevation-lg: 0 12px 32px rgba(18, 22, 42, 0.12);
+
+  /* shadcn → WLStore */
+  --radius: 12px; /* radius-control */
+  --background: var(--bg-page);
+  --foreground: var(--text);
+  --card: var(--bg-card);
+  --card-foreground: var(--text);
+  --popover: var(--bg-elevated);
+  --popover-foreground: var(--text);
+  --primary: var(--action);
+  --primary-foreground: var(--on-action);
+  --secondary: var(--bg-subtle);
+  --secondary-foreground: var(--text);
+  --muted: var(--bg-subtle);
+  --muted-foreground: var(--text-2);
+  --accent: var(--action-soft);
+  --accent-foreground: var(--brand-ink);
+  --destructive: var(--status-danger-solid);
+  --destructive-foreground: var(--status-danger-on);
+  --border: var(--border-default);
+  --input: var(--border-control);
+  --ring: var(--focus);
+  --chart-1: var(--chart-violet);
+  --chart-2: var(--chart-teal);
+  --chart-3: var(--chart-coral);
+  --chart-4: var(--chart-amber);
+  --chart-5: var(--chart-blue);
+  --sidebar: var(--bg-card);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--action);
+  --sidebar-primary-foreground: var(--on-action);
+  --sidebar-accent: var(--action-soft);
+  --sidebar-accent-foreground: var(--brand-ink);
+  --sidebar-border: var(--border-default);
+  --sidebar-ring: var(--focus);
+}
+
+.dark {
+  --coral-text: #ff4d6d;
+  --teal-text: #00b8a0;
+  --amber-text: #ffb020;
+
+  --bg-page: var(--neutral-950);
+  --bg-card: var(--neutral-900);
+  --bg-elevated: var(--neutral-800);
+  --bg-subtle: var(--neutral-800);
+  --bg-disabled: var(--neutral-700);
+  --border-default: var(--neutral-700);
+  --text: var(--neutral-100);
+  --text-2: var(--neutral-400);
+  --text-3: var(--neutral-400);
+  --text-disabled: var(--neutral-600);
+
+  --link: var(--brand-300);
+  --action-soft: var(--brand-900);
+  --brand-ink: var(--brand-200);
+
+  --status-success-bg: #0e2f21;
+  --status-success-fg: #6ce0a3;
+  --status-warning-bg: #3a2a06;
+  --status-warning-fg: #ffc857;
+  --status-danger-bg: #3d1511;
+  --status-danger-fg: #fda29b;
+  --status-info-bg: #0f2a52;
+  --status-info-fg: #84b8ff;
+  --status-neutral-bg: #1f253a;
+  --status-neutral-fg: #cbd2e1;
+  --status-brand-bg: var(--brand-900);
+  --status-brand-fg: var(--brand-ink);
+
+  --chart-violet: #8f74ff;
+  --chart-teal: #00b8a0;
+  --chart-coral: #ff4d6d;
+  --chart-amber: #ffb020;
+  --chart-blue: #2e90fa;
+  --chart-gray: #9aa4bc;
+
+  /* No escuro a elevação vem de borda, não de sombra */
+  --elevation-sm: 0 0 0 1px #343c54;
+  --elevation-md: 0 0 0 1px #4a5470;
+  --elevation-lg: 0 0 0 1px #6b7592;
+
+  /* Aliases redeclarados: em .dark os var() de :root não seriam recalculados */
+  --background: var(--bg-page);
+  --foreground: var(--text);
+  --card: var(--bg-card);
+  --card-foreground: var(--text);
+  --popover: var(--bg-elevated);
+  --popover-foreground: var(--text);
+  --secondary: var(--bg-subtle);
+  --secondary-foreground: var(--text);
+  --muted: var(--bg-subtle);
+  --muted-foreground: var(--text-2);
+  --accent: var(--action-soft);
+  --accent-foreground: var(--brand-ink);
+  --border: var(--border-default);
+  --sidebar: var(--bg-card);
+  --sidebar-foreground: var(--text);
+  --sidebar-accent: var(--action-soft);
+  --sidebar-accent-foreground: var(--brand-ink);
+  --sidebar-border: var(--border-default);
+  --chart-1: var(--chart-violet);
+  --chart-2: var(--chart-teal);
+  --chart-3: var(--chart-coral);
+  --chart-4: var(--chart-amber);
+  --chart-5: var(--chart-blue);
+}
+
+@theme inline {
+  /* Fontes: variáveis definidas por next/font no layout de cada app */
+  --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+  --font-heading: var(--font-plus-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Raios: radius-sm 8 · radius-control 12 · radius-card 16 · radius-hero 24 */
+  --radius-sm: 8px;
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+
+  /* shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* WLStore: escalas */
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+  --color-coral-500: var(--coral-500);
+  --color-coral-600: var(--coral-600);
+  --color-teal-500: var(--teal-500);
+  --color-teal-700: var(--teal-700);
+  --color-amber-500: var(--amber-500);
+  --color-amber-800: var(--amber-800);
+  --color-ink-on-accent: var(--ink-on-accent);
+  --color-coral-text: var(--coral-text);
+  --color-teal-text: var(--teal-text);
+  --color-amber-text: var(--amber-text);
+
+  /* WLStore: semânticos */
+  --color-page: var(--bg-page);
+  --color-subtle: var(--bg-subtle);
+  --color-disabled: var(--bg-disabled);
+  --color-control: var(--border-control);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-disabled: var(--text-disabled);
+  --color-link: var(--link);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-active: var(--action-active);
+  --color-on-action: var(--on-action);
+  --color-action-soft: var(--action-soft);
+  --color-focus: var(--focus);
+  --color-brand-ink: var(--brand-ink);
+
+  /* WLStore: estados */
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-success-solid: var(--status-success-solid);
+  --color-status-success-on: var(--status-success-on);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-warning-solid: var(--status-warning-solid);
+  --color-status-warning-on: var(--status-warning-on);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-fg: var(--status-danger-fg);
+  --color-status-danger-solid: var(--status-danger-solid);
+  --color-status-danger-on: var(--status-danger-on);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-fg: var(--status-info-fg);
+  --color-status-info-solid: var(--status-info-solid);
+  --color-status-info-on: var(--status-info-on);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-fg: var(--status-neutral-fg);
+  --color-status-neutral-solid: var(--status-neutral-solid);
+  --color-status-neutral-on: var(--status-neutral-on);
+  --color-status-brand-bg: var(--status-brand-bg);
+  --color-status-brand-fg: var(--status-brand-fg);
+  --color-status-brand-solid: var(--status-brand-solid);
+
+  /* WLStore: gráficos */
+  --color-chart-violet: var(--chart-violet);
+  --color-chart-teal: var(--chart-teal);
+  --color-chart-coral: var(--chart-coral);
+  --color-chart-amber: var(--chart-amber);
+  --color-chart-blue: var(--chart-blue);
+  --color-chart-gray: var(--chart-gray);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
