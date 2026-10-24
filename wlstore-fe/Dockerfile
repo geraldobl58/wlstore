@@ -15,7 +15,7 @@
 # ---------------------------------------------------------------------------
 # 1. Dependências + build
 # ---------------------------------------------------------------------------
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 ARG PNPM_VERSION=10.29.3
@@ -44,7 +44,7 @@ RUN env ${BUILD_ENV} pnpm nx run "${APP}:build"
 # ---------------------------------------------------------------------------
 # 2. Runtime
 # ---------------------------------------------------------------------------
-FROM node:24-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 ARG APP
